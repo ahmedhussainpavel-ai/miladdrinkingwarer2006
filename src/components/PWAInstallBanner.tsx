@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { MiladLogo } from './MiladLogo';
 import { InstallAppModal } from './InstallAppModal';
+import { trackPWAEvent } from '../lib/analytics';
 
 const SNOOZE_KEY = 'milad_pwa_install_banner_dismissed_until';
 const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -64,6 +65,7 @@ export const PWAInstallBanner: React.FC = () => {
       setIsInstalled(true);
       setIsVisible(false);
       setDeferredPrompt(null);
+      trackPWAEvent('app_installed');
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
@@ -91,6 +93,7 @@ export const PWAInstallBanner: React.FC = () => {
   }, []);
 
   const handleInstallClick = async () => {
+    trackPWAEvent('banner_click');
     if (deferredPrompt) {
       try {
         deferredPrompt.prompt();
@@ -98,15 +101,18 @@ export const PWAInstallBanner: React.FC = () => {
         if (outcome === 'accepted') {
           setIsInstalled(true);
           setIsVisible(false);
+          trackPWAEvent('app_installed');
         }
         setDeferredPrompt(null);
       } catch (err) {
         console.error('Install prompt error:', err);
         setGuideModalOpen(true);
+        trackPWAEvent('guide_open');
       }
     } else {
       // If prompt isn't directly available (iOS, browser restrictions), open the helpful interactive guide
       setGuideModalOpen(true);
+      trackPWAEvent('guide_open');
     }
   };
 

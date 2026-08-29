@@ -17,6 +17,7 @@ interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  loginWithPhoneAndName: (displayName: string, phone: string, area?: string, addressLine?: string) => Promise<UserProfile>;
   signOut: () => Promise<void>;
   loginAsDemoUser: (role: Role) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -35,23 +36,23 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEMO_CUSTOMER: UserProfile = {
-  uid: 'demo-customer-ahmed',
-  email: 'ahmedhussainpavel@gmail.com',
-  displayName: 'Ahmed Hussain',
-  phone: '+880 1712-345678',
-  photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+  uid: 'demo-customer-sylhet',
+  email: 'customer@miladwater.com',
+  displayName: 'আহমেদ হোসেন পাবেল',
+  phone: '01711102448',
+  photoURL: '',
   role: 'customer',
-  walletBalance: 450,
+  walletBalance: 200,
   emptyJarsHeld: {
-    jar20L: 3,
-    jar5L: 1
+    jar20L: 2,
+    jar5L: 0
   },
   savedAddresses: DEFAULT_SAMPLE_ADDRESSES,
-  referralCode: 'MILAD-AHMED-88',
+  referralCode: 'MILAD-SYLHET-01',
   referralStats: {
-    totalInvites: 4,
-    successfulReferrals: 2,
-    totalCreditsEarned: 100,
+    totalInvites: 2,
+    successfulReferrals: 1,
+    totalCreditsEarned: 50,
     pendingCredits: 50
   },
   createdAt: new Date().toISOString()
@@ -60,11 +61,11 @@ const DEMO_CUSTOMER: UserProfile = {
 const DEMO_ADMIN: UserProfile = {
   uid: 'demo-admin-milad',
   email: 'admin@miladwater.com',
-  displayName: 'Milad Operations Director',
-  phone: '+880 1800-999000',
-  photoURL: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
+  displayName: 'এডমিন (ফ্যাক্টরি ইনচার্জ)',
+  phone: '01711102448',
+  photoURL: '',
   role: 'admin',
-  walletBalance: 25000,
+  walletBalance: 50000,
   emptyJarsHeld: {
     jar20L: 0,
     jar5L: 0
@@ -72,10 +73,10 @@ const DEMO_ADMIN: UserProfile = {
   savedAddresses: DEFAULT_SAMPLE_ADDRESSES,
   referralCode: 'MILAD-ADMIN-HQ',
   referralStats: {
-    totalInvites: 12,
-    successfulReferrals: 8,
-    totalCreditsEarned: 400,
-    pendingCredits: 100
+    totalInvites: 5,
+    successfulReferrals: 5,
+    totalCreditsEarned: 250,
+    pendingCredits: 0
   },
   createdAt: new Date().toISOString()
 };
@@ -87,10 +88,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         return JSON.parse(cached);
       } catch (e) {
-        return DEMO_CUSTOMER;
+        return null;
       }
     }
-    return DEMO_CUSTOMER;
+    return null;
   });
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -210,12 +211,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithPhoneAndName = async (displayName: string, phone: string, area = 'মিরবক্সটুলা', addressLine = ''): Promise<UserProfile> => {
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    const uid = 'user-' + (cleanPhone || Date.now().toString());
+    const generatedCode = `MILAD-${(displayName || 'CUSTOMER').split(' ')[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+    
+    const userProfile: UserProfile = {
+      uid,
+      email: `${cleanPhone || 'user'}@miladwater.com`,
+      displayName: displayName.trim() || 'সম্মানিত গ্রাহক',
+      phone: cleanPhone || '০১৭১১-১০২৪৪৮',
+      photoURL: '',
+      role: 'customer',
+      walletBalance: 100, // Welcome signup bonus
+      emptyJarsHeld: {
+        jar20L: 0,
+        jar5L: 0
+      },
+      savedAddresses: addressLine ? [{
+        id: 'addr-primary',
+        tag: 'Home',
+        recipientName: displayName,
+        phone: cleanPhone,
+        addressLine: addressLine,
+        floorUnit: '',
+        area: area || 'মিরবক্সটুলা',
+        city: 'সিলেট',
+        lat: 24.8949,
+        lng: 91.8687,
+        isDefault: true
+      }] : DEFAULT_SAMPLE_ADDRESSES,
+      referralCode: generatedCode,
+      referralStats: {
+        totalInvites: 0,
+        successfulReferrals: 0,
+        totalCreditsEarned: 0,
+        pendingCredits: 0
+      },
+      createdAt: new Date().toISOString()
+    };
+
+    setUser(userProfile);
+    try {
+      await setDoc(doc(db, 'users', uid), userProfile, { merge: true });
+    } catch (e) {
+      console.warn('Local storage fallback used for user profile:', e);
+    }
+    return userProfile;
+  };
+
   const signOut = async () => {
     try {
       await fbSignOut(auth);
       setUser(null);
+      localStorage.removeItem('milad_user_profile');
     } catch (error) {
       console.error('Sign out error:', error);
+      setUser(null);
+      localStorage.removeItem('milad_user_profile');
     }
   };
 

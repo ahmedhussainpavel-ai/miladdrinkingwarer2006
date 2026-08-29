@@ -18,6 +18,7 @@ import {
   Download
 } from 'lucide-react';
 import { createWhatsAppChatUrl } from '../lib/whatsapp';
+import { trackWhatsAppClick, trackPhoneCall } from '../lib/analytics';
 import { InstallAppModal } from './InstallAppModal';
 
 export const Footer: React.FC = () => {
@@ -25,6 +26,7 @@ export const Footer: React.FC = () => {
   const [installModalOpen, setInstallModalOpen] = React.useState(false);
 
   const handleWhatsAppQuickChat = () => {
+    trackWhatsAppClick('footer_quick_chat');
     const url = createWhatsAppChatUrl('+8801711102448', 'আসসালামু আলাইকুম, আমি মিলাদ ড্রিংকিং ওয়াটার (মিরবক্সটুলা, সিলেট) থেকে পানি অর্ডার করতে চাই।');
     window.open(url, '_blank');
   };
@@ -149,7 +151,11 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <PhoneCall className="w-4 h-4 text-emerald-400 shrink-0" />
-                <a href="tel:+8801711102448" className="hover:text-white font-bold text-slate-200">
+                <a 
+                  href="tel:+8801711102448" 
+                  onClick={() => trackPhoneCall('footer_contact_link', '+8801711102448')}
+                  className="hover:text-white font-bold text-slate-200"
+                >
                   +8801711102448 (সরাসরি কল)
                 </a>
               </div>

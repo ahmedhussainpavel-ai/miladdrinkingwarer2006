@@ -8,14 +8,14 @@ import {
   Clock, 
   MapPin, 
   ShieldCheck, 
-  CreditCard, 
   RotateCcw, 
   ArrowRight,
   Droplet,
   Truck,
   Plus
 } from 'lucide-react';
-import { SubscriptionFrequency, PaymentMethod, Address } from '../types';
+import { SubscriptionFrequency, PaymentMethod } from '../types';
+import { trackSubscriptionSelect, trackPurchase } from '../lib/analytics';
 
 export const SubscriptionBuilder: React.FC = () => {
   const { user } = useAuth();
@@ -24,19 +24,27 @@ export const SubscriptionBuilder: React.FC = () => {
   const [frequency, setFrequency] = useState<SubscriptionFrequency>('weekly_2x');
   const [bottleSize, setBottleSize] = useState<'20L' | '5L' | 'Mixed'>('20L');
   const [quantityPerDelivery, setQuantityPerDelivery] = useState<number>(2);
-  const [selectedDays, setSelectedDays] = useState<string[]>(['Monday', 'Thursday']);
-  const [timeSlot, setTimeSlot] = useState<string>('Morning 08:00 AM - 11:00 AM');
+  const [selectedDays, setSelectedDays] = useState<string[]>(['সোমবার', 'বৃহস্পতিবার']);
+  const [timeSlot, setTimeSlot] = useState<string>('সকাল ০৮:০০ - বেলা ১১:০০');
   const [selectedAddressIndex, setSelectedAddressIndex] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
   const [autoDeductWallet, setAutoDeductWallet] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
-  const availableDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const availableDays = [
+    { key: 'শনিবার', label: 'শনি' },
+    { key: 'রবিবার', label: 'রবি' },
+    { key: 'সোমবার', label: 'সোম' },
+    { key: 'মঙ্গলবার', label: 'মঙ্গল' },
+    { key: 'বুধবার', label: 'বুধ' },
+    { key: 'বৃহস্পতিবার', label: 'বৃহ' },
+    { key: 'শুক্রবার', label: 'শুক্র' }
+  ];
 
   const timeSlots = [
-    'Morning 08:00 AM - 11:00 AM',
-    'Afternoon 02:00 PM - 05:00 PM',
-    'Evening 06:00 PM - 09:00 PM'
+    'সকাল ০৮:০০ - বেলা ১১:০০',
+    'দুপুর ০২:০০ - বিকাল ০৫:০০',
+    'সন্ধ্যা ০৬:০০ - রাত ০৯:০০'
   ];
 
   const addresses = user?.savedAddresses || [];
@@ -53,29 +61,30 @@ export const SubscriptionBuilder: React.FC = () => {
 
   const monthlyEstimate = pricePerDelivery * deliveriesPerMonth;
 
-  const toggleDay = (day: string) => {
-    if (selectedDays.includes(day)) {
+  const toggleDay = (dayKey: string) => {
+    if (selectedDays.includes(dayKey)) {
       if (selectedDays.length > 1) {
-        setSelectedDays(selectedDays.filter(d => d !== day));
+        setSelectedDays(selectedDays.filter(d => d !== dayKey));
       }
     } else {
-      setSelectedDays([...selectedDays, day]);
+      setSelectedDays([...selectedDays, dayKey]);
     }
   };
 
   const handleCreateSubscription = async () => {
     if (!currentAddress) {
-      alert('Please add a delivery address.');
+      promptLocationPicker(() => {});
       return;
     }
     setSubmitting(true);
     try {
+      const planTitle = `মিলাদ ${bottleSize === '20L' ? '২০ লিটার' : '৫ লিটার'} রেগুলার প্যাকেজ (${frequency === 'weekly_1x' ? 'সপ্তাহে ১ দিন' : frequency === 'weekly_2x' ? 'সপ্তাহে ২ দিন' : 'সপ্তাহে ৩ দিন'})`;
       await createSubscription({
         userId: user?.uid || 'demo-user',
-        customerName: user?.displayName || 'Valued Subscriber',
-        customerPhone: user?.phone || '+880 1700-000000',
+        customerName: user?.displayName || 'সম্মানিত গ্রাহক',
+        customerPhone: user?.phone || '+8801711102448',
         customerEmail: user?.email || 'customer@miladwater.com',
-        planName: `Milad ${bottleSize} Hydration (${frequency.replace('_', ' ').toUpperCase()})`,
+        planName: planTitle,
         frequency,
         bottleSize,
         quantityPerDelivery,
@@ -88,8 +97,24 @@ export const SubscriptionBuilder: React.FC = () => {
         autoDeductWallet,
         status: 'active',
         startDate: new Date().toISOString().split('T')[0],
-        nextDeliveryDate: `${selectedDays[0]}, Upcoming`
+        nextDeliveryDate: `${selectedDays[0]}, আসন্ন`
       });
+
+      trackSubscriptionSelect(planTitle, monthlyEstimate);
+      trackPurchase({
+        orderId: `sub-${Date.now()}`,
+        value: monthlyEstimate,
+        paymentMethod,
+        isSubscription: true,
+        deliveryArea: currentAddress.area,
+        items: [{
+          id: `plan-${bottleSize}`,
+          name: planTitle,
+          quantity: 1,
+          price: monthlyEstimate,
+        }],
+      });
+
       setCurrentView('customer_portal');
     } catch (e) {
       console.error(e);
@@ -99,79 +124,79 @@ export const SubscriptionBuilder: React.FC = () => {
   };
 
   return (
-    <section className="py-14 bg-gradient-to-b from-slate-50 via-cyan-50/20 to-white">
+    <section className="py-14 sm:py-20 bg-slate-50 border-t border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-100 text-cyan-800 text-xs font-bold mb-2">
-            <Calendar className="w-3.5 h-3.5 text-cyan-600" />
-            <span>Automated Recurring Water Delivery</span>
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-100 text-cyan-900 text-xs font-bold mb-3 border border-cyan-200">
+            <Calendar className="w-4 h-4 text-cyan-700" />
+            <span>স্বয়ংক্রিয় মাসিক ও সাপ্তাহিক ওয়াটার সাবস্ক্রিপশন</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
-            Never Run Out of Pure Water Again
+          <h2 className="text-2xl sm:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
+            পানি ফুরিয়ে যাওয়ার ঝামেলা চিরতরে শেষ
           </h2>
-          <p className="text-slate-600 text-sm mt-2">
-            Set your weekly delivery days and let Milad Water automatically refill your 20L jars with free doorstep delivery and seamless empty jar exchange.
+          <p className="text-slate-600 text-xs sm:text-base mt-2.5 max-w-2xl mx-auto leading-relaxed">
+            আপনার সুবিধাজনক দিন ও সময় নির্ধারণ করে রাখুন। নির্দিষ্ট দিনে আমাদের ডেলিভারি টিম স্বয়ংক্রিয়ভাবে সিলগালা জার পৌঁছে দিয়ে খালি জার বদল করে নিয়ে যাবে।
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
           {/* Main Wizard Form */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 space-y-8">
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-200/90 space-y-7">
             
             {/* Step 1: Frequency Package */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">1</span>
-                <h3 className="text-base font-bold text-slate-900">Choose Delivery Frequency</h3>
+                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">১</span>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">ডেলিভারির ফ্রিকোয়েন্সি নির্বাচন করুন</h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={() => { setFrequency('weekly_1x'); setSelectedDays(['Monday']); }}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
+                  onClick={() => { setFrequency('weekly_1x'); setSelectedDays(['সোমবার']); }}
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                     frequency === 'weekly_1x'
-                      ? 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500/20'
+                      ? 'border-cyan-600 bg-cyan-50/80 ring-2 ring-cyan-500/20 shadow-xs'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <p className="text-xs font-bold text-cyan-700 uppercase">Weekly 1x</p>
-                  <p className="text-sm font-bold text-slate-900 mt-1">1 Day / Week</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Ideal for couples & small homes</p>
+                  <p className="text-[11px] font-black text-cyan-800 uppercase">সাপ্তাহিক ১ দিন</p>
+                  <p className="text-sm font-black text-slate-900 mt-1">সপ্তাহে ১ বার</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">ছোট পরিবার ও ব্যাচেলরদের জন্য</p>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => { setFrequency('weekly_2x'); setSelectedDays(['Monday', 'Thursday']); }}
-                  className={`p-4 rounded-2xl border text-left transition-all relative ${
+                  onClick={() => { setFrequency('weekly_2x'); setSelectedDays(['সোমবার', 'বৃহস্পতিবার']); }}
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative ${
                     frequency === 'weekly_2x'
-                      ? 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500/20'
+                      ? 'border-cyan-600 bg-cyan-50/80 ring-2 ring-cyan-500/20 shadow-xs'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <span className="absolute -top-2 right-3 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-extrabold uppercase shadow-xs">
-                    Most Popular
+                  <span className="absolute -top-2 right-3 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black uppercase shadow-xs">
+                    জনপ্রিয়
                   </span>
-                  <p className="text-xs font-bold text-cyan-700 uppercase">Weekly 2x</p>
-                  <p className="text-sm font-bold text-slate-900 mt-1">2 Days / Week</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Perfect for 4-6 person families</p>
+                  <p className="text-[11px] font-black text-cyan-800 uppercase">সাপ্তাহিক ২ দিন</p>
+                  <p className="text-sm font-black text-slate-900 mt-1">সপ্তাহে ২ বার</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">৪-৬ জনের পরিবারের জন্য সেরা</p>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => { setFrequency('weekly_3x'); setSelectedDays(['Monday', 'Wednesday', 'Friday']); }}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
+                  onClick={() => { setFrequency('weekly_3x'); setSelectedDays(['শনিবার', 'সোমবার', 'বুধবার']); }}
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                     frequency === 'weekly_3x'
-                      ? 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500/20'
+                      ? 'border-cyan-600 bg-cyan-50/80 ring-2 ring-cyan-500/20 shadow-xs'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <p className="text-xs font-bold text-cyan-700 uppercase">Weekly 3x / Office</p>
-                  <p className="text-sm font-bold text-slate-900 mt-1">3 Days / Week</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">For corporate offices & joint families</p>
+                  <p className="text-[11px] font-black text-cyan-800 uppercase">সাপ্তাহিক ৩ দিন / অফিস</p>
+                  <p className="text-sm font-black text-slate-900 mt-1">সপ্তাহে ৩ বার</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">কর্পোরেট অফিস ও যৌথ পরিবারের জন্য</p>
                 </button>
               </div>
             </div>
@@ -179,54 +204,54 @@ export const SubscriptionBuilder: React.FC = () => {
             {/* Step 2: Bottle Type & Jars per delivery */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">2</span>
-                <h3 className="text-base font-bold text-slate-900">Select Bottle Size & Quantity</h3>
+                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">২</span>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">বোতলের ধরন ও পরিমাণ নির্বাচন করুন</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <button
                   type="button"
                   onClick={() => setBottleSize('20L')}
-                  className={`p-3.5 rounded-2xl border flex items-center gap-3 transition-all ${
+                  className={`p-3.5 rounded-2xl border flex items-center gap-3 transition-all cursor-pointer ${
                     bottleSize === '20L'
-                      ? 'border-cyan-500 bg-cyan-50/70 text-cyan-950 font-bold'
-                      : 'border-slate-200 text-slate-700'
+                      ? 'border-cyan-600 bg-cyan-50/80 text-cyan-950 ring-2 ring-cyan-500/20 shadow-xs'
+                      : 'border-slate-200 text-slate-700 hover:border-slate-300'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-xs">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-600 text-white flex items-center justify-center font-black text-xs shrink-0">
                     20L
                   </div>
                   <div className="text-left">
-                    <p className="text-xs font-bold">20L Standard Jars</p>
-                    <p className="text-[10px] text-slate-500 font-normal">৳80 / refill</p>
+                    <p className="text-xs font-extrabold text-slate-900">২০ লিটার রিফিল জার</p>
+                    <p className="text-[11px] text-cyan-800 font-bold">৳৮০ / রিফিল</p>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setBottleSize('5L')}
-                  className={`p-3.5 rounded-2xl border flex items-center gap-3 transition-all ${
+                  className={`p-3.5 rounded-2xl border flex items-center gap-3 transition-all cursor-pointer ${
                     bottleSize === '5L'
-                      ? 'border-cyan-500 bg-cyan-50/70 text-cyan-950 font-bold'
-                      : 'border-slate-200 text-slate-700'
+                      ? 'border-cyan-600 bg-cyan-50/80 text-cyan-950 ring-2 ring-cyan-500/20 shadow-xs'
+                      : 'border-slate-200 text-slate-700 hover:border-slate-300'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-xs">
+                  <div className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-xs shrink-0">
                     5L
                   </div>
                   <div className="text-left">
-                    <p className="text-xs font-bold">5L Compact Bottles</p>
-                    <p className="text-[10px] text-slate-500 font-normal">৳35 / bottle</p>
+                    <p className="text-xs font-extrabold text-slate-900">৫ লিটার হ্যান্ডেল বোতল</p>
+                    <p className="text-[11px] text-teal-800 font-bold">৳৩৫ / বোতল</p>
                   </div>
                 </button>
               </div>
 
-              {/* Quantity Slider */}
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-700">Quantity per scheduled delivery:</span>
-                  <span className="px-3 py-1 bg-cyan-600 text-white rounded-full text-xs font-bold">
-                    {quantityPerDelivery} {bottleSize} {bottleSize === '20L' ? 'Jars' : 'Bottles'}
+              {/* Quantity Selector */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-xs font-bold text-slate-700">প্রতি ডেলিভারিতে বোতল সংখ্যা:</span>
+                  <span className="px-3 py-1 bg-cyan-700 text-white rounded-full text-xs font-black">
+                    {quantityPerDelivery}টি {bottleSize === '20L' ? '২০ লিটার জার' : '৫ লিটার বোতল'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -235,13 +260,13 @@ export const SubscriptionBuilder: React.FC = () => {
                       key={num}
                       type="button"
                       onClick={() => setQuantityPerDelivery(num)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                         quantityPerDelivery === num
                           ? 'bg-cyan-700 text-white shadow-xs'
-                          : 'bg-white text-slate-700 border border-slate-200 hover:border-cyan-300'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:border-cyan-400'
                       }`}
                     >
-                      {num}
+                      {num}টি
                     </button>
                   ))}
                 </div>
@@ -251,27 +276,27 @@ export const SubscriptionBuilder: React.FC = () => {
             {/* Step 3: Days & Time Slot */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">3</span>
-                <h3 className="text-base font-bold text-slate-900">Delivery Days & Time Slot</h3>
+                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">৩</span>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">ডেলিভারির বার ও সময়সূচী</h3>
               </div>
 
               <div className="mb-4">
-                <p className="text-xs font-semibold text-slate-600 mb-2">Select your recurring delivery days:</p>
+                <p className="text-xs font-semibold text-slate-600 mb-2">পছন্দের ডেলিভারির দিনগুলো বেছে নিন:</p>
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
                   {availableDays.map(day => {
-                    const isSelected = selectedDays.includes(day);
+                    const isSelected = selectedDays.includes(day.key);
                     return (
                       <button
-                        key={day}
+                        key={day.key}
                         type="button"
-                        onClick={() => toggleDay(day)}
-                        className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                        onClick={() => toggleDay(day.key)}
+                        className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-cyan-600 text-white shadow-xs'
+                            ? 'bg-cyan-700 text-white shadow-xs font-black'
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
-                        {day.slice(0, 3)}
+                        {day.label}
                       </button>
                     );
                   })}
@@ -279,20 +304,20 @@ export const SubscriptionBuilder: React.FC = () => {
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-slate-600 mb-2">Preferred delivery time window:</p>
+                <p className="text-xs font-semibold text-slate-600 mb-2">পছন্দের ডেলিভারি সময়:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {timeSlots.map(slot => (
                     <button
                       key={slot}
                       type="button"
                       onClick={() => setTimeSlot(slot)}
-                      className={`p-2.5 rounded-xl text-xs font-semibold border text-left flex items-center gap-2 transition-all ${
+                      className={`p-3 rounded-xl text-xs font-bold border text-left flex items-center gap-2 transition-all cursor-pointer ${
                         timeSlot === slot
-                          ? 'border-cyan-500 bg-cyan-50 text-cyan-900'
+                          ? 'border-cyan-600 bg-cyan-50 text-cyan-950 shadow-2xs'
                           : 'border-slate-200 text-slate-700 hover:border-slate-300'
                       }`}
                     >
-                      <Clock className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+                      <Clock className="w-4 h-4 text-cyan-600 shrink-0" />
                       <span className="truncate">{slot}</span>
                     </button>
                   ))}
@@ -304,18 +329,16 @@ export const SubscriptionBuilder: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">4</span>
-                  <h3 className="text-base font-bold text-slate-900">Delivery Address</h3>
+                  <span className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold text-xs flex items-center justify-center">৪</span>
+                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900">ডেলিভারির ঠিকানা</h3>
                 </div>
                 <button
                   type="button"
-                  onClick={() => promptLocationPicker((newAddr) => {
-                    // callback
-                  })}
-                  className="text-xs font-bold text-cyan-700 hover:text-cyan-800 flex items-center gap-1"
+                  onClick={() => promptLocationPicker(() => {})}
+                  className="text-xs font-bold text-cyan-700 hover:text-cyan-800 flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Pin New Address on Map</span>
+                  <span>ম্যাপে নতুন ঠিকানা চিহ্নিত করুন</span>
                 </button>
               </div>
 
@@ -327,15 +350,15 @@ export const SubscriptionBuilder: React.FC = () => {
                       onClick={() => setSelectedAddressIndex(idx)}
                       className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
                         selectedAddressIndex === idx
-                          ? 'border-cyan-500 bg-cyan-50/60 ring-1 ring-cyan-400'
+                          ? 'border-cyan-600 bg-cyan-50/70 ring-1 ring-cyan-500'
                           : 'border-slate-200 hover:border-slate-300 bg-white'
                       }`}
                     >
                       <MapPin className={`w-4 h-4 mt-0.5 shrink-0 ${selectedAddressIndex === idx ? 'text-cyan-600' : 'text-slate-400'}`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900">{addr.tag}</span>
-                          <span className="text-xs text-slate-500 font-medium">{addr.recipientName} ({addr.phone})</span>
+                          <span className="text-xs font-extrabold text-slate-900">{addr.tag}</span>
+                          <span className="text-xs text-slate-600 font-medium">{addr.recipientName} ({addr.phone})</span>
                         </div>
                         <p className="text-xs text-slate-600 truncate mt-0.5">{addr.addressLine}, {addr.area}, {addr.city}</p>
                       </div>
@@ -346,9 +369,9 @@ export const SubscriptionBuilder: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => promptLocationPicker(() => {})}
-                  className="w-full p-4 border-2 border-dashed border-cyan-300 rounded-2xl text-center text-cyan-700 font-bold text-xs hover:bg-cyan-50"
+                  className="w-full p-4 border-2 border-dashed border-cyan-300 rounded-2xl text-center text-cyan-700 font-bold text-xs hover:bg-cyan-50 cursor-pointer"
                 >
-                  + Click to Pin and Save Your Delivery Address
+                  + ম্যাপে ক্লিক করে আপনার ডেলিভারি ঠিকানা যুক্ত করুন
                 </button>
               )}
             </div>
@@ -356,44 +379,44 @@ export const SubscriptionBuilder: React.FC = () => {
           </div>
 
           {/* Right Summary & Checkout Column */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 sticky top-24">
+          <div className="lg:col-span-5 bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 sticky top-24 border border-slate-800">
             
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div>
                 <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider">
-                  Subscription Summary
+                  সাবস্ক্রিপশন সারসংক্ষেপ
                 </span>
-                <h3 className="text-xl font-heading font-extrabold text-white mt-0.5">
-                  {quantityPerDelivery}x {bottleSize} ({selectedDays.join(' & ')})
+                <h3 className="text-lg sm:text-xl font-heading font-extrabold text-white mt-1">
+                  {quantityPerDelivery}টি {bottleSize === '20L' ? '২০L জার' : '৫L বোতল'} ({selectedDays.join(' ও ')})
                 </h3>
               </div>
               <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">
-                Active Plan
+                সক্রিয় প্যাকেজ
               </span>
             </div>
 
             {/* Price Calculations */}
             <div className="space-y-2.5 text-xs text-slate-300">
               <div className="flex justify-between">
-                <span>Per Delivery ({quantityPerDelivery}x {bottleSize} @ ৳{unitPrice}):</span>
+                <span>প্রতি ডেলিভারির মূল্য ({quantityPerDelivery}টি @ ৳{unitPrice}):</span>
                 <span className="font-bold text-white">৳{pricePerDelivery}</span>
               </div>
               <div className="flex justify-between">
-                <span>Monthly Scheduled Deliveries:</span>
-                <span className="font-bold text-white">{deliveriesPerMonth} Deliveries</span>
+                <span>মাসে মোট নির্ধারিত ডেলিভারি:</span>
+                <span className="font-bold text-white">{deliveriesPerMonth} বার</span>
               </div>
               <div className="flex justify-between">
-                <span>Doorstep Delivery Fee:</span>
-                <span className="font-bold text-emerald-400">FREE</span>
+                <span>সিলেট শহরে হোম ডেলিভারি:</span>
+                <span className="font-bold text-emerald-400">সম্পূর্ণ ফ্রি</span>
               </div>
               <div className="flex justify-between">
-                <span>1-to-1 Empty Jar Return:</span>
-                <span className="font-bold text-cyan-300">৳0 Deposit</span>
+                <span>খালি জার জমা দিয়ে রিফিল বদল:</span>
+                <span className="font-bold text-cyan-300">৳০ জামানত</span>
               </div>
 
               <div className="pt-3 border-t border-slate-800 flex justify-between items-baseline">
-                <span className="text-sm font-bold text-white">Estimated Monthly Total:</span>
-                <span className="text-2xl font-extrabold text-cyan-400 font-heading">
+                <span className="text-sm font-bold text-white">মাসিক আনুমানিক বিল:</span>
+                <span className="text-2xl font-black text-cyan-300 font-heading">
                   ৳{monthlyEstimate.toLocaleString()}
                 </span>
               </div>
@@ -402,46 +425,46 @@ export const SubscriptionBuilder: React.FC = () => {
             {/* Payment Method Selector for Subscription */}
             <div className="space-y-2 pt-2">
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Payment Option
+                পেমেন্ট পদ্ধতি
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('wallet')}
-                  className={`p-3 rounded-xl text-left border transition-all ${
+                  className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                     paymentMethod === 'wallet'
                       ? 'border-cyan-400 bg-cyan-950 text-white font-bold'
                       : 'border-slate-800 bg-slate-800/50 text-slate-400'
                   }`}
                 >
-                  <p className="text-xs">Milad Wallet</p>
-                  <p className="text-[10px] text-cyan-400 font-normal">Balance: ৳{user?.walletBalance || 0}</p>
+                  <p className="text-xs font-bold">মিলাদ ওয়ালেট</p>
+                  <p className="text-[10px] text-cyan-400 font-normal">ব্যালেন্স: ৳{user?.walletBalance || 0}</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('cod')}
-                  className={`p-3 rounded-xl text-left border transition-all ${
+                  className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                     paymentMethod === 'cod'
                       ? 'border-cyan-400 bg-cyan-950 text-white font-bold'
                       : 'border-slate-800 bg-slate-800/50 text-slate-400'
                   }`}
                 >
-                  <p className="text-xs">Pay on Delivery</p>
-                  <p className="text-[10px] text-slate-400 font-normal">Cash / bKash to driver</p>
+                  <p className="text-xs font-bold">ক্যাশ অন ডেলিভারি</p>
+                  <p className="text-[10px] text-slate-400 font-normal">পানি পেয়ে ক্যাশ / বিকাশ</p>
                 </button>
               </div>
             </div>
 
             {/* Guarantees */}
-            <div className="p-3.5 bg-slate-800/60 rounded-2xl border border-slate-700/60 text-xs text-slate-300 space-y-1.5">
+            <div className="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/60 text-xs text-slate-300 space-y-1.5">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Pause or cancel anytime with one click in your portal</span>
+                <span>যেকোনো সময় ড্যাশবোর্ড থেকে পজ বা বাতিল করার সুবিধা</span>
               </div>
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>Empty jars swapped at doorstep automatically</span>
+                <span>দরজায় নতুন সিলগালা জার দিয়ে খালি জার স্বয়ংক্রিয়ভাবে বদল</span>
               </div>
             </div>
 
@@ -450,10 +473,10 @@ export const SubscriptionBuilder: React.FC = () => {
               type="button"
               disabled={submitting}
               onClick={handleCreateSubscription}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-slate-950 font-extrabold text-sm shadow-xl shadow-cyan-400/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 font-black text-sm shadow-xl shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-[0.98]"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{submitting ? 'Setting up Plan...' : 'Activate Water Subscription'}</span>
+              <span>{submitting ? 'প্যাকেজ সেটআপ হচ্ছে...' : 'মাসিক সাবস্ক্রিপশন সক্রিয় করুন'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 

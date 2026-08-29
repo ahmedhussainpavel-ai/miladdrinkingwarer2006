@@ -10,7 +10,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 80, // In BDT
     jarDeposit: 250, // One-time security deposit if not exchanging empty jar
     description: '৭-ধাপ বিশিষ্ট রিভার্স অসমোসিস (RO), ইউভি (UV) এবং ওজোন নির্বীজিত বিশুদ্ধ মিনারেল পানি। বাসা, অফিস, হাসপাতাল ও রেস্টুরেন্টের জন্য উপযুক্ত।',
-    image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=600&q=80',
+    image: 'prod-20l-jar',
     features: [
       '৭-স্তরের RO + UV + ওজোন ফিল্ট্রেশন',
       'টিডিএস (TDS) < ৩৫ PPM এবং পিএইচ ৭.৪ ব্যালেন্সড',
@@ -30,7 +30,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 35,
     jarDeposit: 40,
     description: 'ছোট পরিবার, ডাইনিং টেবিল ও ভ্রমণের জন্য সহজ ও হালকা ৫ লিটার বোতল।',
-    image: 'https://images.unsplash.com/photo-1564419320461-6870880221ad?auto=format&fit=crop&w=600&q=80',
+    image: 'prod-5l-bottle',
     features: [
       'সহজে বহনের জন্য আরামদায়ক হ্যান্ডেল',
       '১০০% ফুড গ্রেড বিপিএ-মুক্ত পিইটি বোতল',
@@ -50,7 +50,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 360,
     jarDeposit: 0,
     description: 'কনফারেন্স, ঘরোয়া অনুষ্ঠান, মেহমানদারি ও রেস্টুরেন্টের জন্য ক্রিস্টাল ক্লিয়ার ৫০০ মিলি বোতলের কেস।',
-    image: 'https://images.unsplash.com/photo-1559839914-ba2a0f8ebc6e?auto=format&fit=crop&w=600&q=80',
+    image: 'prod-500ml-case',
     features: [
       'এয়ারটাইট সিলযুক্ত সম্পূর্ণ নিরাপদ ক্যাপ',
       'হাতে সহজে ধরার উপযোগী স্লিম ডিজাইন',
@@ -70,7 +70,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 450,
     jarDeposit: 0,
     description: 'এক ক্লিকেই স্বয়ংক্রিয়ভাবে পানি গ্লাসে পড়বে। ১ বার ফুল চার্জে ৬-৮টি ২০ লিটার জার অনায়াসে চলবে।',
-    image: 'https://images.unsplash.com/photo-1584727638096-042c45049ebe?auto=format&fit=crop&w=600&q=80',
+    image: 'prod-electric-pump',
     features: [
       'দ্রুত ১.৮ লিটার/মিনিট ওয়াটার ফ্লো',
       'ইউএসবি-সি ফাস্ট চার্জিং ১২০০mAh ব্যাটারি',
@@ -90,7 +90,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 1200,
     jarDeposit: 0,
     description: 'প্রাকৃতিক মাটির ফিল্ট্রেশন পট ও আকর্ষণীয় কাঠের ট্রাইপড স্ট্যান্ড। কোনো বিদ্যুৎ ছাড়াই পানি প্রাকৃতিকভাবে সুস্বাদু ও ঠাণ্ডা রাখে।',
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+    image: 'prod-ceramic-dispenser',
     features: [
       'প্রাকৃতিক উপায়ে পানি ঠাণ্ডা ও সুস্বাদু থাকে',
       'মজবুত কাঠের স্ট্যান্ড ও পিতলের পুশ ট্যাপ',
@@ -110,7 +110,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 9500,
     jarDeposit: 0,
     description: 'চা-কফির জন্য ৯০° সে. ফুটন্ত পানি এবং বরফ শীতল ৫° সে. ঠাণ্ডা পানি পাওয়ার জন্য হেভি ডিউটি কম্প্রেসার ডিসপেন্সার।',
-    image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=600&q=80',
+    image: 'prod-hot-cold-dispenser',
     features: [
       'শক্তিশালী কম্প্রেসার কুলিং ও হিটিং',
       'গরম পানির জন্য চাইল্ড সেফটি লক',

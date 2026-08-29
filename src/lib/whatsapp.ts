@@ -29,10 +29,9 @@ export interface WhatsAppDocumentOptions {
 /**
  * Normalizes and formats Bangladeshi phone numbers to international standard (8801XXXXXXXXX).
  * Handles formats like:
- * - "+880 1712-345678" -> "8801712345678"
- * - "01712345678"      -> "8801712345678"
- * - "8801712345678"    -> "8801712345678"
- * - "01819-876543"     -> "8801819876543"
+ * - "+880 1711-102448" -> "8801711102448"
+ * - "01711102448"      -> "8801711102448"
+ * - "8801711102448"    -> "8801711102448"
  */
 export function formatBangladeshiPhone(rawPhone: string): string {
   if (!rawPhone) return '';
@@ -45,17 +44,17 @@ export function formatBangladeshiPhone(rawPhone: string): string {
     digits = digits.slice(2);
   }
 
-  // If starts with 880 (e.g. 8801712345678)
+  // If starts with 880 (e.g. 8801711102448)
   if (digits.startsWith('880') && digits.length === 13) {
     return digits;
   }
 
-  // If starts with 01 (local 11-digit format e.g. 01712345678)
+  // If starts with 01 (local 11-digit format e.g. 01711102448)
   if (digits.startsWith('01') && digits.length === 11) {
     return `88${digits}`;
   }
 
-  // If starts with 1 (e.g. 1712345678, missing 0)
+  // If starts with 1 (e.g. 1711102448, missing 0)
   if (digits.startsWith('1') && digits.length === 10) {
     return `880${digits}`;
   }

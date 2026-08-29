@@ -30,9 +30,9 @@ export const MiladLogo: React.FC<MiladLogoProps> = ({
   };
 
   const textSizes = {
-    xs: { title: 'text-xs', sub: 'text-[8px]' },
-    sm: { title: 'text-sm', sub: 'text-[9px]' },
-    md: { title: 'text-base font-extrabold', sub: 'text-[10px]' },
+    xs: { title: 'text-[11px] font-bold', sub: 'text-[8px]' },
+    sm: { title: 'text-[13px] sm:text-sm font-extrabold', sub: 'text-[9px]' },
+    md: { title: 'text-sm sm:text-base font-extrabold', sub: 'text-[10px]' },
     lg: { title: 'text-xl font-black', sub: 'text-xs' },
     xl: { title: 'text-2xl font-black', sub: 'text-sm' },
     '2xl': { title: 'text-3xl font-black', sub: 'text-base' }
@@ -45,7 +45,7 @@ export const MiladLogo: React.FC<MiladLogoProps> = ({
         <img
           src={officialLogoImg}
           alt="মিলাদ ড্রিংকিং ওয়াটার (Milad Drinking Water) - সিলেট"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain drop-shadow-xs"
           referrerPolicy="no-referrer"
           loading="eager"
         />
@@ -55,15 +55,15 @@ export const MiladLogo: React.FC<MiladLogoProps> = ({
         <div className="leading-tight select-none">
           <div className="flex items-center gap-1.5">
             <span className={`font-heading ${textColor} ${textSizes[size].title} tracking-tight whitespace-nowrap`}>
-              {compactText ? 'মিলাদ ওয়াটার' : 'মিলাদ ড্রিংকিং ওয়াটার'}
+              মিলাদ ড্রিংকিং ওয়াটার
             </span>
-            <span className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded-md font-bold bg-cyan-600 text-white">
+            <span className="hidden md:inline-block text-[9px] px-1.5 py-0.2 rounded-md font-bold bg-cyan-600 text-white">
               সিলেট
             </span>
           </div>
           {showSubtitle && (
             <p className={`font-bold tracking-wider uppercase mt-0.5 hidden sm:block ${subtextColor} ${textSizes[size].sub} whitespace-nowrap`}>
-              MIRBOXTULA • SYLHET
+              মিরবক্সটুলা • সিলেট
             </p>
           )}
         </div>

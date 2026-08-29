@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { generateOrderInvoicePDF } from '../lib/pdfGenerator';
+import { trackPurchase } from '../lib/analytics';
 import { Address, Order, PaymentMethod } from '../types';
 
 export const CheckoutModal: React.FC = () => {
@@ -132,6 +133,16 @@ export const CheckoutModal: React.FC = () => {
     };
 
     const newOrder = await createOrder(orderPayload);
+
+    // Track Purchase event in GA4
+    trackPurchase({
+      orderId: newOrder.id || newOrder.invoiceNumber,
+      value: finalPayable,
+      paymentMethod,
+      isSubscription: false,
+      deliveryArea: selectedAddress.area,
+      items: orderPayload.items,
+    });
 
     // If paid by wallet, deduct
     if (paymentMethod === 'wallet') {

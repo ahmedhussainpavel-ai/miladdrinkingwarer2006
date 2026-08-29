@@ -9,7 +9,8 @@ import {
   ChevronDown, 
   ChevronUp, 
   Star,
-  Quote
+  Quote,
+  Check
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -20,97 +21,97 @@ export const QualityStandards: React.FC = () => {
 
   const filtrationSteps = [
     {
-      step: '01',
-      title: 'Multimedia Sand Filtration',
-      desc: 'High-density quartz sand and anthracite beds remove suspended particles, clay, and physical turbidity down to 20 microns.'
+      step: '০১',
+      title: 'মাল্টিমিডিয়া স্যান্ড ফিল্ট্রেশন',
+      desc: 'উচ্চ ঘনত্বের সিলিকা কোয়ার্টজ ও অ্যান্ট্রাসাইট স্তরের মাধ্যমে পানিতে থাকা অদৃশ্য ধূলিকণা, কাদা ও ভৌত ভাসমান অপদ্রব্য ২০ মাইক্রন পর্যন্ত দূর করা হয়।'
     },
     {
-      step: '02',
-      title: 'Activated Carbon Adsorption',
-      desc: 'High-iodine virgin coconut shell carbon removes residual chlorine, unpleasant tastes, organic chemicals, and volatile compounds.'
+      step: '০২',
+      title: 'অ্যাক্টিভেটেড কার্বন অ্যাডসর্পশন',
+      desc: 'উচ্চমানের নারিকেলের খোসা থেকে প্রস্তুত কার্বনের সাহায্যে পানির ক্লোরিন, দুর্গন্ধ, ক্ষতিকর জৈব রাসায়নিক উপাদান ও অতিরিক্ত গন্ধ সম্পূর্ণ শুষে নেওয়া হয়।'
     },
     {
-      step: '03',
-      title: 'Dual Micron Cartridge Polishing',
-      desc: 'High-efficiency 5-micron and 1-micron spun polypropylene filters trap microscopic particulate matter and protect RO membranes.'
+      step: '০৩',
+      title: 'ডুয়াল মাইক্রন কার্টিজ পলিশিং',
+      desc: '৫-মাইক্রন ও ১-মাইক্রন বিশিষ্ট উচ্চ ঘনত্বের পলিপ্রোপাইলিন ফিল্টারের মাধ্যমে সূক্ষ্মতম বালুকণা আটকে আরও স্বচ্ছ ও মসৃণ পানি নিশ্চিত করা হয়।'
     },
     {
-      step: '04',
-      title: 'High-Pressure Reverse Osmosis',
-      desc: '0.0001-micron semi-permeable membranes filter out 99.9% of dissolved heavy metals (arsenic, lead), excess sodium, and nitrates.'
+      step: '০৪',
+      title: 'হাই-প্রেসার রিভার্স অসমোসিস (RO)',
+      desc: '০.০০০১ মাইক্রন মেমব্রেনের ভেতর দিয়ে উচ্চ চাপে পানি প্রবাহিত করে ৯৯.৯% ভারী ধাতু (আর্সেনিক, সীসা), মাত্রাতিরিক্ত লবণাক্ততা ও নাইট্রেট দূর করা হয়।'
     },
     {
-      step: '05',
-      title: 'Mineral Remineralization & pH Balance',
-      desc: 'Enriched with precise, health-optimized balances of Calcium (Ca2+), Magnesium (Mg2+), and Potassium (K+) to maintain optimal pH 7.2–7.6.'
+      step: '০৫',
+      title: 'মিনারেল ব্যালেন্স ও পিএইচ নিয়ন্ত্রণ',
+      desc: 'মানবদেহের জন্য অতীব জরুরি ক্যালসিয়াম (Ca), ম্যাগনেসিয়াম (Mg) ও পটাসিয়াম (K) সুষম মাত্রায় যোগ করে পানির পিএইচ (pH) ৭.২ থেকে ৭.৬ এ ব্যালেন্স রাখা হয়।'
     },
     {
-      step: '06',
-      title: 'UV Germicidal Irradiation',
-      desc: 'C-band ultraviolet lamps (254nm wavelength) destroy DNA structures of bacteria, viruses, and microbial cysts without chemical residues.'
+      step: '০৬',
+      title: 'আল্ট্রাভায়োলেট (UV) রশ্মি জীবাণুমুক্তকরণ',
+      desc: '২৫৪ ন্যানোমিটার তরঙ্গদৈর্ঘ্যের সি-ব্যান্ড ইউভি ল্যাম্পের মাধ্যমে কোনো প্রকার রাসায়নিক ছাড়াই ব্যাকটেরিয়া, ভাইরাস ও মাইক্রোবায়াল সিস্ট ধ্বংস করা হয়।'
     },
     {
-      step: '07',
-      title: 'Ozone Sterilization & Bottling',
-      desc: 'Dissolved medical-grade ozone (O3) sanitizes the food-grade jar interior during automated sterile bottling, reverting to pure oxygen within 12 hours.'
+      step: '০৭',
+      title: 'ওজোন (Ozone) নির্বীজন ও অটো-বটলিং',
+      desc: 'খাদ্য-গ্রেড জারে ওজোন গ্যাসের মাধ্যমে চূড়ান্ত জীবাণুমুক্ত করে স্পর্শহীন ভ্যাকুয়াম চেম্বারে ক্যাপ সিলিং করা হয়, যা পানিকে দীর্ঘ সময় তাজা ও সুস্বাদু রাখে।'
     }
   ];
 
   const faqs = [
     {
-      q: 'How does the 1-to-1 Empty Jar Return system work?',
-      a: 'When you place a refill order or have a scheduled subscription delivery, our delivery driver brings fresh, factory-sterilized 20L jars and collects your empty polycarbonate jars on a 1-to-1 basis. You pay only the water refill price (৳80) with zero new jar security deposit.'
+      q: 'খালি জার বদল (১-টু-১ রিটার্ন) নিয়ম কী?',
+      a: 'আপনি যখন রিফিল অর্ডার করবেন, আমাদের ডেলিভারি প্রতিনিধি আপনার ঠিকানায় সম্পূর্ণ সিলগালা বিশুদ্ধ পানির জার পৌঁছে দিয়ে আপনার আগের খালি জারটি সংগ্রহ করবেন। এতে আপনাকে জারের কোনো অতিরিক্ত জামানত দিতে হয় না, শুধু পানির নির্ধারিত মূল্য (৳৮০) প্রযোজ্য হয়।'
     },
     {
-      q: 'What is the security deposit for new customers without empty jars?',
-      a: 'If you do not currently have empty 20L polycarbonate jars to exchange, a refundable security deposit of ৳250 per jar is added on your first order. This deposit is 100% refundable anytime you return the jars and discontinue service.'
+      q: 'নতুন গ্রাহকদের যাদের খালি জার নেই তাদের জামানত কত?',
+      a: 'প্রথমবার অর্ডারে যদি আপনার কাছে কোনো খালি জার না থাকে, তবে প্রতি জার বাবদ একবারের জন্য ৳২৫০ সিকিউরিটি ডিপোজিট রাখা হয়। পরবর্তীতে আপনি সার্ভিস বন্ধ করে জার ফেরত দিলে পুরো জামানত শতভাগ ফেরত পেয়ে যাবেন।'
     },
     {
-      q: 'Can I pause or change my weekly subscription delivery days?',
-      a: 'Yes, absolutely! From your Customer Dashboard, you can pause your subscription with one click (e.g. while traveling), resume anytime, or change your preferred delivery days and time slots without any penalty or administrative fees.'
+      q: 'সাপ্তাহিক সাবস্ক্রিপশনের ডেলিভারি কি যেকোনো সময় পরিবর্তন বা সাময়িক বন্ধ করা যাবে?',
+      a: 'হ্যাঁ, অবশ্যই! আপনার কাস্টমার ড্যাশবোর্ড থেকে এক ক্লিকেই সাবস্ক্রিপশন পজ (Pause) করতে পারবেন (যেমন ভ্রমণের সময়) অথবা ডেলিভারির দিন ও সময় কোনো অতিরিক্ত চার্জ ছাড়াই পরিবর্তন করতে পারবেন।'
     },
     {
-      q: 'How are the 20L jars cleaned and sanitized at the factory?',
-      a: 'Every returned jar undergoes a rigorous 5-step automated robotic wash: high-pressure internal hot alkaline detergent wash, disinfectant rinse, reverse osmosis water pre-rinse, final ozonated sterilizing rinse, and contactless cleanroom filling.'
+      q: 'কারখানায় ২০ লিটার জার কীভাবে পরিষ্কার ও জীবাণুমুক্ত করা হয়?',
+      a: 'প্রতিটি ব্যবহৃত জার কারখানায় আসার পর ৫-ধাপের স্বয়ংক্রিয় রোবটিক মেশিনে উচ্চ তাপমাত্রার ক্ষারীয় ওয়াশ, রিভার্স অসমোসিস ওয়াটার রিঞ্জ, ফুড-গ্রেড ওজোন স্প্রে এবং সম্পূর্ণ স্পর্শহীন ক্লিনরুমে ফিলিং করা হয়।'
     },
     {
-      q: 'Do you deliver to upper floor apartments without elevators?',
-      a: 'Yes, our dedicated logistics personnel are trained to deliver jars directly to your apartment doorstep. Please specify your floor number in the delivery instructions.'
+      q: 'লিফট ছাড়া বহুতল ভবনে কি ডেলিভারি দেওয়া হয়?',
+      a: 'হ্যাঁ, আমাদের অভিজ্ঞ ডেলিভারি টিম আপনার ফ্ল্যাটের দরজায় পানি পৌঁছে দিতে প্রতিশ্রুতিবদ্ধ। অর্ডার করার সময় অনুগ্রহ করে আপনার তলা নম্বর ও বিশেষ নির্দেশনা লিখে রাখুন।'
     }
   ];
 
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
+    <section className="py-14 sm:py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-20">
         
         {/* Quality Header */}
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold mb-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-600" />
-            <span>Factory Purity & Standards</span>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-100 text-cyan-900 text-xs font-bold mb-3 border border-cyan-200">
+            <ShieldCheck className="w-4 h-4 text-cyan-700" />
+            <span>বিএসটিআই মান ও ৭-ধাপের ফিল্ট্রেশন</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
-            The 7-Stage Purification Technology
+          <h2 className="text-2xl sm:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
+            আন্তর্জাতিক মানের ৭-ধাপের বিশুদ্ধকরণ প্রযুক্তি
           </h2>
-          <p className="text-slate-600 text-sm mt-2">
-            Engineered to exceed WHO (World Health Organization) and BSTI standards for bottled drinking water.
+          <p className="text-slate-600 text-xs sm:text-base mt-2.5 max-w-2xl mx-auto leading-relaxed">
+            বিশ্ব স্বাস্থ্য সংস্থা (WHO) এবং বাংলাদেশ স্ট্যান্ডার্ডস অ্যান্ড টেস্টিং ইনস্টিটিউশন (BSTI) মানদণ্ড অনুযায়ী প্রস্তুত শতভাগ নিরাপদ ও সুস্বাদু খাবার পানি।
           </p>
         </div>
 
         {/* 7-Stage Interactive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
           {filtrationSteps.map((step, idx) => (
             <div 
               key={idx}
-              className="p-6 rounded-3xl bg-slate-50 border border-slate-200/80 hover:border-cyan-300 hover:bg-cyan-50/30 transition-all space-y-3 group"
+              className="p-6 rounded-3xl bg-slate-50 border border-slate-200/90 hover:border-cyan-400 hover:bg-cyan-50/20 transition-all space-y-3 group shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-extrabold font-heading text-cyan-600 group-hover:scale-110 transition-transform">
+                <span className="text-2xl font-black font-heading text-cyan-700 group-hover:scale-105 transition-transform">
                   {step.step}
                 </span>
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
               </div>
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-cyan-800 transition-colors">
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-cyan-900 transition-colors">
                 {step.title}
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -120,42 +121,42 @@ export const QualityStandards: React.FC = () => {
           ))}
 
           {/* Cleanroom Showcase Card */}
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-900 via-sky-900 to-slate-900 text-white flex flex-col justify-between">
+          <div className="p-6 rounded-3xl bg-slate-900 text-white flex flex-col justify-between border border-slate-800 shadow-md">
             <div>
-              <span className="px-2.5 py-1 rounded-full bg-cyan-400/20 text-cyan-300 text-[10px] font-bold uppercase tracking-wider">
-                Automated Cleanroom
+              <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold uppercase tracking-wider">
+                স্বয়ংক্রিয় ফিলিং লাইন
               </span>
-              <h3 className="text-xl font-bold font-heading mt-3">Class 10,000 Bottling Line</h3>
+              <h3 className="text-lg sm:text-xl font-black font-heading mt-3 text-white">ক্লাস ১০,০০০ ক্লিনরুম প্রসেস</h3>
               <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                Positive-pressure HEPA filtered cleanroom prevents airborne contaminants from ever coming into contact with your drinking water.
+                পজিটিভ প্রেসার হেপা ফিল্টারযুক্ত ক্লিনরুমের কারণে বাইরের কোনো ধূলিকণা বা জীবাণু পানির সংস্পর্শে আসতে পারে না।
               </p>
             </div>
-            <div className="pt-4 border-t border-slate-700/80 flex items-center justify-between text-xs text-cyan-300 font-semibold">
-              <span>ISO 22000 Certified</span>
-              <span>100% Hands-Free</span>
+            <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between text-xs text-cyan-300 font-bold">
+              <span>আইএসও মানসম্মত</span>
+              <span>১০০% স্পর্শহীন রিফিল</span>
             </div>
           </div>
         </div>
 
         {/* Live TDS & Mineral Meter Simulator */}
-        <div className="bg-gradient-to-r from-sky-50 via-cyan-50 to-blue-50 rounded-3xl p-8 border border-cyan-200/80">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xs">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
             <div className="lg:col-span-6 space-y-3">
               <span className="text-xs font-bold text-cyan-800 uppercase tracking-wider">
-                Water Purity Benchmarking
+                বিশুদ্ধতার পরিমাপক
               </span>
-              <h3 className="text-2xl font-heading font-extrabold text-slate-900">
-                Total Dissolved Solids (TDS) Interactive Meter
+              <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-slate-900">
+                টিডিএস (TDS) ও খনিজ পরিমাপক সিমুলেটর
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                TDS measures mineral ions, salts, and dissolved particles in parts per million (PPM). WHO defines ideal drinking water between 20 to 100 PPM with alkaline balance.
+                টিডিএস (Total Dissolved Solids) দিয়ে পানিতে দ্রবীভূত খনিজের পরিমাপ নির্ণয় করা হয়। বিশ্ব স্বাস্থ্য সংস্থার মতে খাবার পানির জন্য ২০ থেকে ৫০ পিপিএম হলো সবচেয়ে আদর্শ ও মিষ্টি মান।
               </p>
 
               {/* Slider simulation */}
               <div className="pt-2">
-                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
-                  <span>Simulate Source:</span>
-                  <span className="text-cyan-700 font-extrabold">{simulatedTDS} PPM</span>
+                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                  <span>পানির উৎস পরীক্ষা করুন:</span>
+                  <span className="text-cyan-800 font-black">{simulatedTDS} PPM</span>
                 </div>
                 <input 
                   type="range"
@@ -165,40 +166,40 @@ export const QualityStandards: React.FC = () => {
                   onChange={(e) => setSimulatedTDS(parseInt(e.target.value))}
                   className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-600"
                 />
-                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                  <span>Milad Water (28 PPM)</span>
-                  <span>Filtered Tap (150 PPM)</span>
-                  <span>Unfiltered Tap (350+ PPM)</span>
+                <div className="flex justify-between text-[10px] text-slate-500 mt-1.5 font-medium">
+                  <span>মিলাদ ওয়াটার (২৮ PPM)</span>
+                  <span>সাধারণ ফিল্টার (১৫০ PPM)</span>
+                  <span>সাপ্লাইয়ের পানি (৩৫০+ PPM)</span>
                 </div>
               </div>
             </div>
 
             {/* TDS Result Display Box */}
-            <div className="lg:col-span-6 bg-white rounded-2xl p-6 shadow-md border border-cyan-100 flex flex-col justify-center text-center space-y-3">
+            <div className="lg:col-span-6 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-center text-center space-y-3">
               <div className="inline-flex items-center justify-center gap-2">
                 <Activity className="w-5 h-5 text-cyan-600" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Live Reading Result</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">ল্যাব টেস্ট ফলাফল</span>
               </div>
-              <div className="text-4xl font-extrabold text-cyan-700 font-heading">
+              <div className="text-4xl font-black text-cyan-700 font-heading">
                 {simulatedTDS} <span className="text-base text-slate-500 font-normal">PPM</span>
               </div>
               <p className="text-xs font-bold text-slate-800">
-                {simulatedTDS <= 45 ? '💎 Milad Factory Standard: Ultra-Pure, Mineral-Balanced & Soft' :
-                 simulatedTDS <= 150 ? '⚠️ Standard Filtered Water: Acceptable but contains higher mineral variance' :
-                 '❌ Unfiltered Tap Water: High heavy metals, chlorine, and sediment risk'}
+                {simulatedTDS <= 45 ? 'মিলাদ ফ্যাক্টরি স্ট্যান্ডার্ড: প্রিমিয়াম বিশুদ্ধ, খনিজসমৃদ্ধ ও শতভাগ নিরাপদ' :
+                 simulatedTDS <= 150 ? '⚠️ সাধারণ ফিল্টার পানি: খাওয়ার উপযোগী তবে খনিজের তারতম্য রয়েছে' :
+                 '❌ অপরিশোধিত পানি: আর্সেনিক, অতিরিক্ত আয়রন ও ব্যাকটেরিয়ার ঝুঁকি রয়েছে'}
               </p>
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-[11px]">
+              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 text-[11px]">
                 <div>
-                  <p className="text-slate-400">pH Level</p>
-                  <p className="font-bold text-slate-800">7.4 (Optimal)</p>
+                  <p className="text-slate-400">পিএইচ মাত্রা</p>
+                  <p className="font-bold text-slate-800">৭.৪ (ব্যালেন্সড)</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">E. Coli & Coliform</p>
-                  <p className="font-bold text-emerald-600">0.00 / 100ml</p>
+                  <p className="text-slate-400">ই-কোলাই জীবাণু</p>
+                  <p className="font-bold text-emerald-600">০.০০ (সম্পূর্ণ মুক্ত)</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Lead / Arsenic</p>
-                  <p className="font-bold text-emerald-600">Undetected (Nil)</p>
+                  <p className="text-slate-400">আর্সেনিক / সীসা</p>
+                  <p className="font-bold text-emerald-600">শূন্য (মুক্ত)</p>
                 </div>
               </div>
             </div>
@@ -207,20 +208,20 @@ export const QualityStandards: React.FC = () => {
 
         {/* Customer Reviews Section */}
         <div>
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h3 className="text-2xl font-heading font-extrabold text-slate-900">
-              Trusted by 12,000+ Homes, Offices & Events
+          <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+            <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-slate-900">
+              সিলেটের সম্মানিত গ্রাহকদের মতামত
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Read real feedback from our verified daily subscribers and corporate clients.
+              আমাদের নিয়মিত গ্রাহক, কর্পোরেট অফিস ও ডায়াগনস্টিক সেন্টারের বিশ্বস্ত প্রতিক্রিয়া।
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
             {reviews.map((rev) => (
               <div 
                 key={rev.id}
-                className="p-6 rounded-3xl bg-slate-50 border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4"
+                className="p-6 rounded-3xl bg-slate-50 border border-slate-200/90 shadow-2xs flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -229,8 +230,10 @@ export const QualityStandards: React.FC = () => {
                         <Star key={i} className="w-4 h-4 fill-amber-400" />
                       ))}
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-bold">
-                      {rev.userType}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-900 font-bold">
+                      {rev.userType === 'Family Subscriber' ? 'ফ্যামিলি গ্রাহক' :
+                       rev.userType === 'Corporate' ? 'কর্পোরেট' :
+                       rev.userType === 'Event Organizer' ? 'ইভেন্ট' : 'ভেরিফাইড গ্রাহক'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-700 leading-relaxed italic">
@@ -253,11 +256,11 @@ export const QualityStandards: React.FC = () => {
         {/* Frequently Asked Questions */}
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-heading font-extrabold text-slate-900">
-              Frequently Asked Questions
+            <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-slate-900">
+              সাধারণ জিজ্ঞাসা (FAQ)
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Everything you need to know about deliveries, jar deposits, and water quality.
+              ডেলিভারি, জার জামানত ও পানি অর্ডার সংক্রান্ত যেকোনো প্রশ্নের উত্তর।
             </p>
           </div>
 
@@ -265,13 +268,14 @@ export const QualityStandards: React.FC = () => {
             {faqs.map((faq, idx) => (
               <div 
                 key={idx}
-                className="border border-slate-200 rounded-2xl overflow-hidden bg-white"
+                className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs"
               >
                 <button
+                  type="button"
                   onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
-                  <span>{faq.q}</span>
+                  <span className="pr-2">{faq.q}</span>
                   {activeFaq === idx ? (
                     <ChevronUp className="w-4 h-4 text-cyan-600 shrink-0" />
                   ) : (
@@ -280,7 +284,7 @@ export const QualityStandards: React.FC = () => {
                 </button>
 
                 {activeFaq === idx && (
-                  <div className="p-4 pt-0 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/50">
+                  <div className="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/60">
                     {faq.a}
                   </div>
                 )}
@@ -293,3 +297,4 @@ export const QualityStandards: React.FC = () => {
     </section>
   );
 };
+

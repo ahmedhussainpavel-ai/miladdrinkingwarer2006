@@ -1,5 +1,6 @@
 import React from 'react';
 import { useStore } from '../context/StoreContext';
+import { ProductVisual } from './ProductVisual';
 import { 
   X, 
   Trash2, 
@@ -11,6 +12,7 @@ import {
   ShoppingCart,
   Sparkles
 } from 'lucide-react';
+import { trackBeginCheckout } from '../lib/analytics';
 
 export const CartDrawer: React.FC = () => {
   const { 
@@ -73,11 +75,12 @@ export const CartDrawer: React.FC = () => {
                     className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3"
                   >
                     <div className="flex items-start gap-3">
-                      <img 
-                        src={item.product.image} 
-                        alt={item.product.name}
-                        className="w-14 h-14 object-contain rounded-xl bg-white p-1 border border-slate-100 shrink-0"
-                      />
+                      <div className="w-14 h-14 rounded-xl bg-white p-1 border border-slate-100 shrink-0 flex items-center justify-center overflow-hidden">
+                        <ProductVisual 
+                          productId={item.product.id} 
+                          className="w-full h-full scale-75"
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold text-slate-900 truncate">
@@ -189,6 +192,7 @@ export const CartDrawer: React.FC = () => {
 
               <button
                 onClick={() => {
+                  trackBeginCheckout(cartTotal.grandTotal, cartTotal.totalBottles, cart);
                   setIsCartDrawerOpen(false);
                   setIsCheckoutOpen(true);
                 }}
