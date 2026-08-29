@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profiles",
+      "description": "Customer and admin profiles with empty jar counts, saved addresses, and wallet balances",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "admin", "staff"] },
+        "walletBalance": { "type": "number" },
+        "emptyJarsHeld": {
+          "type": "object",
+          "properties": {
+            "jar20L": { "type": "number" },
+            "jar5L": { "type": "number" }
+          }
+        },
+        "addresses": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "displayName"]
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "One-time, subscription deliveries, and bulk event orders",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "type": { "type": "string", "enum": ["one_time", "subscription_delivery", "event_bulk"] },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "deliveryAddress": { "type": "object" },
+        "deliveryDate": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "deliveryZone": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "status": { "type": "string" },
+        "emptyJarsReturned": { "type": "number" },
+        "assignedDriver": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["customerName", "customerPhone", "totalAmount", "status"]
+    },
+    "subscriptions": {
+      "title": "Water Subscriptions",
+      "description": "Recurring water bottle deliveries with frequency, schedule, and pause controls",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "packageType": { "type": "string" },
+        "bottleType": { "type": "string" },
+        "quantityPerDelivery": { "type": "number" },
+        "deliveryDays": { "type": "array" },
+        "deliveryTimeSlot": { "type": "string" },
+        "pricePerDelivery": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "paused", "cancelled"] },
+        "nextDeliveryDate": { "type": "string" },
+        "startDate": { "type": "string" }
+      },
+      "required": ["userId", "packageType", "bottleType", "status"]
+    }
+  }
+}

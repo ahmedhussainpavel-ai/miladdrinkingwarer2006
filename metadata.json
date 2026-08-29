@@ -1,0 +1,6 @@
+{
+  "name": "মিলাদ ড্রিংকিং ওয়াটার - Milad Drinking Water",
+  "description": "সিলেটের মিরবক্সটুলায় অবস্থিত বিশুদ্ধ মিনারেল পানির কারখানা ও সহজ অনলাইন অর্ডার পোর্টাল। বাসা, অফিস ও অনুষ্ঠানের জন্য ২০ লিটার ও ৫ লিটার জার ডেলিভারি।",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

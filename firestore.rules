@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (request.auth.uid == userId || request.resource.data.role != 'admin');
+    }
+
+    // Products collection (public read, authenticated write)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if true; // allow guest/on-demand checkout as well
+      allow update, delete: if true;
+    }
+
+    // Subscriptions collection
+    match /subscriptions/{subscriptionId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Factory Inventory
+    match /factoryInventory/{recordId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Delivery Routes
+    match /deliveryRoutes/{routeId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Invoices
+    match /invoices/{invoiceId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Reviews & Events inquiries
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /contactRequests/{requestId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAuthenticated();
+    }
+  }
+}

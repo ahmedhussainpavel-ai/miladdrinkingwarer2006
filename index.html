@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <title>মিলাদ ড্রিংকিং ওয়াটার - Milad Drinking Water</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0284c7" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="মিলাদ ওয়াটার" />
+    <meta name="description" content="সিলেটের মিরবক্সটুলায় অবস্থিত বিশুদ্ধ মিনারেল পানির কারখানা ও সহজ অনলাইন অর্ডার পোর্টাল। বাসা, অফিস ও অনুষ্ঠানের জন্য ২০ লিটার ও ৫ লিটার জার ডেলিভারি।" />
+    
+    <!-- Open Graph & Social Media Sharing -->
+    <meta property="og:title" content="মিলাদ ড্রিংকিং ওয়াটার - Milad Drinking Water" />
+    <meta property="og:description" content="সিলেটের মিরবক্সটুলায় অবস্থিত বিশুদ্ধ মিনারেল পানির কারখানা ও সহজ অনলাইন অর্ডার পোর্টাল। বাসা, অফিস ও অনুষ্ঠানের জন্য ২০ লিটার ও ৫ লিটার জার ডেলিভারি।" />
+    <meta property="og:image" content="/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="মিলাদ ড্রিংকিং ওয়াটার - Milad Drinking Water" />
+    <meta name="twitter:description" content="সিলেটের মিরবক্সটুলায় অবস্থিত বিশুদ্ধ মিনারেল পানির কারখানা ও সহজ অনলাইন অর্ডার পোর্টাল।" />
+    <meta name="twitter:image" content="/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('SW registration note:', err);
+          });
+        });
+      }
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-cyan-200 selection:text-cyan-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

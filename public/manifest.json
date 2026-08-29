@@ -1,0 +1,57 @@
+{
+  "name": "মিলাদ ড্রিংকিং ওয়াটার | Milad Drinking Water",
+  "short_name": "মিলাদ ওয়াটার",
+  "description": "সিলেটের মিরবক্সটুলায় অবস্থিত বিশুদ্ধ মিনারেল পানির কারখানা ও সহজ অনলাইন অর্ডার পোর্টাল।",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0284c7",
+  "scope": "/",
+  "lang": "bn",
+  "categories": ["shopping", "food", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "পানি অর্ডার করুন",
+      "short_name": "অর্ডার",
+      "description": "দ্রুত পানির জার ও বোতল অর্ডার",
+      "url": "/#products",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "মাসিক সাবস্ক্রিপশন",
+      "short_name": "সাবস্ক্রিপশন",
+      "description": "অটোমেটিক সাপ্তাহিক রিফিল সেবা",
+      "url": "/#subscriptions",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "গ্রাহক পোর্টাল",
+      "short_name": "পোর্টাল",
+      "description": "অর্ডার হিস্ট্রি ও জার হিসাব",
+      "url": "/#customer_portal",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
