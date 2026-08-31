@@ -6,13 +6,12 @@ import {
   Package, 
   CalendarClock, 
   User, 
-  ShoppingCart,
   PhoneCall
 } from 'lucide-react';
 
 export const MobileBottomNav: React.FC = () => {
-  const { currentView, setCurrentView, cartTotal, setIsCartDrawerOpen } = useStore();
-  const { t, formatCurrency, formatNumber } = useLanguage();
+  const { currentView, setCurrentView } = useStore();
+  const { t } = useLanguage();
 
   const navItems: {
     id: AppView;
@@ -56,7 +55,7 @@ export const MobileBottomNav: React.FC = () => {
       aria-label="Mobile Navigation Bar" 
       className="lg:hidden fixed bottom-0 left-0 right-0 z-50 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] pb-[max(env(safe-area-inset-bottom,0px),0.25rem)] select-none"
     >
-      <div className="max-w-lg mx-auto px-3 h-16 flex items-center justify-between gap-1">
+      <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between gap-2">
         
         {/* Core Iconic Navigation Tabs */}
         {navItems.map((item) => {
@@ -85,40 +84,12 @@ export const MobileBottomNav: React.FC = () => {
           );
         })}
 
-        {/* Dynamic Money & Cart Iconic Button */}
-        <button
-          onClick={() => setIsCartDrawerOpen(true)}
-          aria-label={t.cart.title}
-          title={cartTotal.totalBottles > 0 ? `${formatCurrency(cartTotal.grandTotal)} (${formatNumber(cartTotal.totalBottles)} আইটেম)` : t.nav.cart}
-          className={`relative flex items-center justify-center gap-1.5 px-3 h-11 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer shrink-0 ${
-            cartTotal.totalBottles > 0
-              ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-sky-600/25'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80'
-          }`}
-        >
-          <div className="relative flex items-center justify-center">
-            <ShoppingCart className={`w-4.5 h-4.5 ${cartTotal.totalBottles > 0 ? 'text-white stroke-[2.2]' : 'text-slate-600 stroke-[1.8]'}`} />
-            
-            {/* Item Count Notification Badge */}
-            {cartTotal.totalBottles > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[9px] font-black h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-xs border border-white">
-                {formatNumber(cartTotal.totalBottles)}
-              </span>
-            )}
-          </div>
-
-          {/* Iconic Money Display (৳) */}
-          <span className={`text-[12px] font-black tracking-tight tabular-nums ${cartTotal.totalBottles > 0 ? 'text-amber-200' : 'text-slate-800'}`}>
-            {cartTotal.totalBottles > 0 ? formatCurrency(cartTotal.grandTotal) : '৳০'}
-          </span>
-        </button>
-
         {/* Emergency Delivery Hotline Call Pill */}
         <a
           href="tel:+8801711102448"
           aria-label={t.hero.emergencyDelivery}
           title={t.hero.emergencyDelivery}
-          className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all duration-200 cursor-pointer shrink-0 ml-0.5"
+          className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all duration-200 cursor-pointer shrink-0 ml-1"
         >
           <PhoneCall className="w-4.5 h-4.5 animate-pulse stroke-[2.2]" />
         </a>
