@@ -1,5 +1,26 @@
 {
   "entities": {
+    "products": {
+      "title": "Products",
+      "description": "Store products including 20L water jars, 5L bottles, and dispensers with admin-controlled pricing and deposits",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "subTitle": { "type": "string" },
+        "category": { "type": "string" },
+        "volume": { "type": "string" },
+        "price": { "type": "number" },
+        "jarDeposit": { "type": "number" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "features": { "type": "array" },
+        "popular": { "type": "boolean" },
+        "inStock": { "type": "boolean" },
+        "unit": { "type": "string" }
+      },
+      "required": ["name", "price"]
+    },
     "users": {
       "title": "User Profiles",
       "description": "Customer and admin profiles with empty jar counts, saved addresses, and wallet balances",

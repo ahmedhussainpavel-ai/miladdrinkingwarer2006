@@ -1,5 +1,6 @@
 import React from 'react';
 import officialLogoImg from '../assets/images/milad_official_logo.png';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MiladLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -20,6 +21,8 @@ export const MiladLogo: React.FC<MiladLogoProps> = ({
   subtextColor = 'text-cyan-800',
   className = ''
 }) => {
+  const { language, t } = useLanguage();
+
   const sizeMap = {
     xs: 'w-7 h-7',
     sm: 'w-9 h-9',
@@ -38,13 +41,16 @@ export const MiladLogo: React.FC<MiladLogoProps> = ({
     '2xl': { title: 'text-3xl font-black', sub: 'text-base' }
   };
 
+  const sylhetBadge = language === 'bn' ? 'সিলেট' : 'Sylhet';
+  const subtitleText = language === 'bn' ? 'মিরবক্সটুলা • সিলেট' : 'Mirboxtula • Sylhet';
+
   return (
     <div className={`flex items-center gap-2 sm:gap-2.5 ${className}`}>
       {/* Clean Official Logo Display */}
       <div className={`relative ${sizeMap[size]} shrink-0 flex items-center justify-center`}>
         <img
           src={officialLogoImg}
-          alt="মিলাদ ড্রিংকিং ওয়াটার (Milad Drinking Water) - সিলেট"
+          alt={`${t.appName} - ${sylhetBadge}`}
           className="w-full h-full object-contain drop-shadow-xs"
           referrerPolicy="no-referrer"
           loading="eager"
@@ -55,15 +61,15 @@ export const MiladLogo: React.FC<MiladLogoProps> = ({
         <div className="leading-tight select-none">
           <div className="flex items-center gap-1.5">
             <span className={`font-heading ${textColor} ${textSizes[size].title} tracking-tight whitespace-nowrap`}>
-              মিলাদ ড্রিংকিং ওয়াটার
+              {t.appName}
             </span>
             <span className="hidden md:inline-block text-[9px] px-1.5 py-0.2 rounded-md font-bold bg-cyan-600 text-white">
-              সিলেট
+              {sylhetBadge}
             </span>
           </div>
           {showSubtitle && (
             <p className={`font-bold tracking-wider uppercase mt-0.5 hidden sm:block ${subtextColor} ${textSizes[size].sub} whitespace-nowrap`}>
-              মিরবক্সটুলা • সিলেট
+              {subtitleText}
             </p>
           )}
         </div>

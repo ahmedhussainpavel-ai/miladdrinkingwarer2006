@@ -42,18 +42,18 @@ const DEMO_CUSTOMER: UserProfile = {
   phone: '01711102448',
   photoURL: '',
   role: 'customer',
-  walletBalance: 200,
+  walletBalance: 0,
   emptyJarsHeld: {
-    jar20L: 2,
+    jar20L: 0,
     jar5L: 0
   },
-  savedAddresses: DEFAULT_SAMPLE_ADDRESSES,
+  savedAddresses: [],
   referralCode: 'MILAD-SYLHET-01',
   referralStats: {
-    totalInvites: 2,
-    successfulReferrals: 1,
-    totalCreditsEarned: 50,
-    pendingCredits: 50
+    totalInvites: 0,
+    successfulReferrals: 0,
+    totalCreditsEarned: 0,
+    pendingCredits: 0
   },
   createdAt: new Date().toISOString()
 };
@@ -65,17 +65,17 @@ const DEMO_ADMIN: UserProfile = {
   phone: '01711102448',
   photoURL: '',
   role: 'admin',
-  walletBalance: 50000,
+  walletBalance: 0,
   emptyJarsHeld: {
     jar20L: 0,
     jar5L: 0
   },
-  savedAddresses: DEFAULT_SAMPLE_ADDRESSES,
+  savedAddresses: [],
   referralCode: 'MILAD-ADMIN-HQ',
   referralStats: {
-    totalInvites: 5,
-    successfulReferrals: 5,
-    totalCreditsEarned: 250,
+    totalInvites: 0,
+    successfulReferrals: 0,
+    totalCreditsEarned: 0,
     pendingCredits: 0
   },
   createdAt: new Date().toISOString()
@@ -140,12 +140,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               phone: fbUser.phoneNumber || '',
               photoURL: fbUser.photoURL || '',
               role: fbUser.email?.includes('admin') ? 'admin' : 'customer',
-              walletBalance: 200, // Welcome bonus
+              walletBalance: 0,
               emptyJarsHeld: {
-                jar20L: 2,
+                jar20L: 0,
                 jar5L: 0
               },
-              savedAddresses: DEFAULT_SAMPLE_ADDRESSES,
+              savedAddresses: [],
               referralCode: generatedCode,
               referralStats: {
                 totalInvites: 0,
@@ -188,9 +188,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone: fbUser.phoneNumber || '',
           photoURL: fbUser.photoURL || '',
           role: fbUser.email?.includes('admin') ? 'admin' : 'customer',
-          walletBalance: 200,
-          emptyJarsHeld: { jar20L: 2, jar5L: 0 },
-          savedAddresses: DEFAULT_SAMPLE_ADDRESSES,
+          walletBalance: 0,
+          emptyJarsHeld: { jar20L: 0, jar5L: 0 },
+          savedAddresses: [],
           referralCode: generatedCode,
           referralStats: {
             totalInvites: 0,
@@ -223,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       phone: cleanPhone || '০১৭১১-১০২৪৪৮',
       photoURL: '',
       role: 'customer',
-      walletBalance: 100, // Welcome signup bonus
+      walletBalance: 0,
       emptyJarsHeld: {
         jar20L: 0,
         jar5L: 0
@@ -240,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lat: 24.8949,
         lng: 91.8687,
         isDefault: true
-      }] : DEFAULT_SAMPLE_ADDRESSES,
+      }] : [],
       referralCode: generatedCode,
       referralStats: {
         totalInvites: 0,

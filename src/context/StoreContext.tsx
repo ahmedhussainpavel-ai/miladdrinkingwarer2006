@@ -18,6 +18,7 @@ import {
   DEFAULT_REVIEWS,
   DEFAULT_SAMPLE_ADDRESSES
 } from '../lib/mockData';
+import { cacheProductCatalogForOffline, getCachedOfflineCatalog } from '../lib/useNetworkStatus';
 import { db, collection, doc, setDoc, getDocs, updateDoc, onSnapshot } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import confetti from 'canvas-confetti';
@@ -44,6 +45,11 @@ interface StoreContextType {
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
   products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => void;
+  updateProduct: (id: string, updates: Partial<Product>) => void;
+  deleteProduct: (id: string) => void;
+  resetProductsToDefault: () => void;
+  clearAllDemoData: () => void;
   cart: CartItem[];
   addToCart: (product: Product, quantity?: number, exchangeEmptyJar?: boolean) => void;
   removeFromCart: (productId: string) => void;
@@ -72,6 +78,8 @@ interface StoreContextType {
   reviews: CustomerReview[];
   addReview: (review: Omit<CustomerReview, 'id' | 'date' | 'verified'>) => void;
   // Modals & UI states
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean) => void;
   isCartDrawerOpen: boolean;
   setIsCartDrawerOpen: (open: boolean) => void;
   isCheckoutOpen: boolean;
@@ -96,7 +104,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { user, updateWalletBalance, updateEmptyJars } = useAuth();
 
   const [currentView, setCurrentView] = useState<AppView>('home');
-  const [products] = useState<Product[]>(DEFAULT_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('milad_products');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // fallback
+      }
+    }
+    const cachedOffline = getCachedOfflineCatalog();
+    return cachedOffline || DEFAULT_PRODUCTS;
+  });
+
+  // Automatically cache product catalog for instant offline viewing
+  useEffect(() => {
+    localStorage.setItem('milad_products', JSON.stringify(products));
+    cacheProductCatalogForOffline(products);
+  }, [products]);
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('milad_cart');
     return saved ? JSON.parse(saved) : [];
@@ -104,224 +130,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('milad_orders');
-    if (saved) return JSON.parse(saved);
-    // Initial sample orders with varied WhatsApp communication statuses
-    return [
-      {
-        id: 'ord-1001',
-        invoiceNumber: 'MDW-2026-8841',
-        userId: 'demo-customer-ahmed',
-        customerName: 'আহমেদ হোসেন পাভেল',
-        customerPhone: '+8801711102448',
-        customerEmail: 'ahmedhussainpavel@gmail.com',
-        type: 'subscription_delivery',
-        items: [
-          {
-            productId: 'prod-20l-jar',
-            name: '২০ লিটার মিনারেল ওয়াটার জার (20L Jar)',
-            volume: '২০ লিটার',
-            quantity: 2,
-            unitPrice: 80,
-            jarDepositPaid: 0,
-            emptyJarsToReturn: 2,
-            totalPrice: 160
-          }
-        ],
-        subtotal: 160,
-        depositTotal: 0,
-        deliveryFee: 0,
-        discount: 0,
-        totalAmount: 160,
-        deliveryAddress: DEFAULT_SAMPLE_ADDRESSES[0],
-        deliveryDate: 'Today',
-        timeSlot: 'সকাল ০৮:০০ - ১১:০০',
-        deliveryZone: 'মিরবক্সটুলা ও জিন্দাবাজার জোন',
-        paymentMethod: 'wallet',
-        paymentStatus: 'paid',
-        status: 'out_for_delivery',
-        whatsappNotificationStatus: 'sent',
-        whatsappLastSentAt: new Date(Date.now() - 3600000 * 1).toISOString(),
-        whatsappLastTrigger: 'OUT_FOR_DELIVERY',
-        assignedDriver: {
-          name: 'কবির হোসেন (Kabir)',
-          phone: '+8801711102448',
-          vehicleNo: 'সিলেট মেট্রো-ড ১১-২২৩৩'
-        },
-        emptyJarsReturnedCount: 2,
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: 'ord-1002',
-        invoiceNumber: 'MDW-2026-8842',
-        userId: 'demo-customer-ahmed',
-        customerName: 'আহমেদ হোসেন পাভেল',
-        customerPhone: '+8801711102448',
-        customerEmail: 'ahmedhussainpavel@gmail.com',
-        type: 'one_time',
-        items: [
-          {
-            productId: 'prod-electric-pump',
-            name: 'অটোমেটিক ইলেকট্রিক জার পাম্প ডিসপেন্সার',
-            volume: 'Universal',
-            quantity: 1,
-            unitPrice: 450,
-            jarDepositPaid: 0,
-            emptyJarsToReturn: 0,
-            totalPrice: 450
-          }
-        ],
-        subtotal: 450,
-        depositTotal: 0,
-        deliveryFee: 0,
-        discount: 50,
-        totalAmount: 400,
-        deliveryAddress: DEFAULT_SAMPLE_ADDRESSES[0],
-        deliveryDate: '২৪ আগস্ট ২০২৬',
-        timeSlot: 'দুপুর ০২:০০ - ০৫:০০',
-        deliveryZone: 'মিরবক্সটুলা ও জিন্দাবাজার জোন',
-        paymentMethod: 'bkash',
-        paymentStatus: 'paid',
-        status: 'delivered',
-        whatsappNotificationStatus: 'sent',
-        whatsappLastSentAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        whatsappLastTrigger: 'DELIVERED',
-        emptyJarsReturnedCount: 0,
-        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000 * 3).toISOString()
-      },
-      {
-        id: 'ord-1003',
-        invoiceNumber: 'MDW-2026-8855',
-        userId: 'cust-fintech-01',
-        customerName: 'ডা. মাহফুজুর রহমান (পপুলার ডায়াগনস্টিক)',
-        customerPhone: '+8801711102448',
-        customerEmail: 'popular.sylhet@gmail.com',
-        type: 'subscription_delivery',
-        items: [
-          {
-            productId: 'prod-20l-jar',
-            name: '২০ লিটার মিনারেল ওয়াটার জার',
-            volume: '২০ লিটার',
-            quantity: 8,
-            unitPrice: 80,
-            jarDepositPaid: 0,
-            emptyJarsToReturn: 8,
-            totalPrice: 640
-          }
-        ],
-        subtotal: 640,
-        depositTotal: 0,
-        deliveryFee: 0,
-        discount: 40,
-        totalAmount: 600,
-        deliveryAddress: {
-          id: 'addr-zindabazar-corp',
-          tag: 'Corporate Office',
-          recipientName: 'ডা. মাহফুজুর রহমান',
-          phone: '+8801711102448',
-          addressLine: 'পপুলার সেন্টার, জেল রোড',
-          floorUnit: 'লেভেল ৩',
-          area: 'জিন্দাবাজার',
-          city: 'সিলেট',
-          postalCode: '৩১০০',
-          lat: 24.8965,
-          lng: 91.8710,
-          isDefault: true
-        },
-        deliveryDate: 'Today',
-        timeSlot: 'দুপুর ০২:০০ - ০৫:০০',
-        deliveryZone: 'আম্বরখানা ও দরগাহ গেট জোন',
-        paymentMethod: 'rocket',
-        paymentStatus: 'paid',
-        status: 'sterilizing_bottling',
-        whatsappNotificationStatus: 'pending',
-        emptyJarsReturnedCount: 8,
-        createdAt: new Date(Date.now() - 1800000).toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: 'ord-1004',
-        invoiceNumber: 'MDW-2026-8860',
-        userId: 'cust-grandsultan-01',
-        customerName: 'হোটেল গ্র্যান্ড সুরমা',
-        customerPhone: '+8801711102448',
-        customerEmail: 'events@grandsurma.com',
-        type: 'event_bulk',
-        items: [
-          {
-            productId: 'prod-20l-jar',
-            name: '২০ লিটার মিনারেল ওয়াটার জার',
-            volume: '২০ লিটার',
-            quantity: 25,
-            unitPrice: 80,
-            jarDepositPaid: 0,
-            emptyJarsToReturn: 25,
-            totalPrice: 2000
-          }
-        ],
-        subtotal: 2000,
-        depositTotal: 0,
-        deliveryFee: 0,
-        discount: 100,
-        totalAmount: 1900,
-        deliveryAddress: {
-          id: 'addr-amberkhana-event',
-          tag: 'Event Hall',
-          recipientName: 'ম্যানেজার, হোটেল গ্র্যান্ড সুরমা',
-          phone: '+8801711102448',
-          addressLine: 'আম্বরখানা পয়েন্ট, সিলেট',
-          floorUnit: 'ব্যাংকুয়েট হল',
-          area: 'আম্বরখানা',
-          city: 'সিলেট',
-          postalCode: '৩১০০',
-          lat: 24.9032,
-          lng: 91.8680,
-          isDefault: true
-        },
-        deliveryDate: 'Tomorrow',
-        timeSlot: 'সকাল ০৮:০০ - ১১:০০',
-        deliveryZone: 'আম্বরখানা ও দরগাহ গেট জোন',
-        paymentMethod: 'cod',
-        paymentStatus: 'unpaid',
-        status: 'order_placed',
-        whatsappNotificationStatus: 'failed',
-        whatsappFailureReason: 'Gateway timeout / Invalid response',
-        emptyJarsReturnedCount: 25,
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
     const saved = localStorage.getItem('milad_subscriptions');
-    if (saved) return JSON.parse(saved);
-    return [
-      {
-        id: 'sub-7701',
-        userId: 'demo-customer-ahmed',
-        customerName: 'আহমেদ হোসেন পাভেল',
-        customerPhone: '+8801711102448',
-        customerEmail: 'ahmedhussainpavel@gmail.com',
-        planName: 'ফ্যামিলি হাইড্রেশন প্লাস (সপ্তাহে ২ দিন)',
-        frequency: 'weekly_2x',
-        bottleSize: '20L',
-        quantityPerDelivery: 2,
-        deliveryDays: ['সোমবার', 'বৃহস্পতিবার'],
-        timeSlot: 'সকাল ০৮:০০ - ১১:০০',
-        deliveryAddress: DEFAULT_SAMPLE_ADDRESSES[0],
-        pricePerDelivery: 160,
-        monthlyEstimate: 1280,
-        paymentMethod: 'wallet',
-        autoDeductWallet: true,
-        status: 'active',
-        startDate: '2026-08-01',
-        nextDeliveryDate: 'বৃহস্পতিবার, ২৮ আগস্ট',
-        deliveriesCompleted: 7,
-        createdAt: '2026-08-01T10:00:00.000Z'
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [factoryInventory, setFactoryInventory] = useState<FactoryJarInventory>(() => {
@@ -331,6 +145,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [deliveryZones] = useState<DeliveryZone[]>(DEFAULT_DELIVERY_ZONES);
   const [reviews, setReviews] = useState<CustomerReview[]>(DEFAULT_REVIEWS);
+
+  // Modals & UI
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
   // Modals
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
@@ -596,6 +413,62 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('success', 'Thank You!', 'Your review has been submitted.');
   };
 
+  useEffect(() => {
+    localStorage.setItem('milad_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('milad_orders', JSON.stringify(orders));
+  }, [orders]);
+
+  useEffect(() => {
+    localStorage.setItem('milad_subscriptions', JSON.stringify(subscriptions));
+  }, [subscriptions]);
+
+  useEffect(() => {
+    localStorage.setItem('milad_factory_inventory', JSON.stringify(factoryInventory));
+  }, [factoryInventory]);
+
+  // Product CRUD
+  const addProduct = (prodData: Omit<Product, 'id'>) => {
+    const newProd: Product = {
+      ...prodData,
+      id: 'prod-' + Date.now()
+    };
+    setProducts(prev => [newProd, ...prev]);
+    showToast('success', 'নতুন পণ্য যুক্ত হয়েছে', `"${newProd.name}" সফলভাবে যুক্ত হয়েছে।`);
+  };
+
+  const updateProduct = (id: string, updates: Partial<Product>) => {
+    setProducts(prev =>
+      prev.map(p => (p.id === id ? { ...p, ...updates } : p))
+    );
+    showToast('success', 'মূল্য ও তথ্য আপডেট হয়েছে', 'পণ্যটির নতুন মূল্য বা তথ্য সংরক্ষিত হয়েছে।');
+  };
+
+  const deleteProduct = (id: string) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    showToast('info', 'পণ্য মুছে ফেলা হয়েছে', 'পণ্যটি ক্যাটালগ থেকে সরানো হয়েছে।');
+  };
+
+  const resetProductsToDefault = () => {
+    setProducts(DEFAULT_PRODUCTS);
+    localStorage.setItem('milad_products', JSON.stringify(DEFAULT_PRODUCTS));
+    showToast('info', 'ডিফল্ট পণ্য তালিকা রিস্টোর করা হয়েছে', 'স্ট্যান্ডার্ড প্রোডাক্ট ও প্রাইস সেট করা হয়েছে।');
+  };
+
+  const clearAllDemoData = () => {
+    localStorage.removeItem('milad_orders');
+    localStorage.removeItem('milad_subscriptions');
+    localStorage.removeItem('milad_cart');
+    localStorage.removeItem('milad_factory_inventory');
+    setOrders([]);
+    setSubscriptions([]);
+    setCart([]);
+    setFactoryInventory(DEFAULT_FACTORY_INVENTORY);
+    showToast('info', 'ডাটা রিসেট সম্পন্ন', 'সকল ডেমো অর্ডার এবং তথ্য মুছে ফ্রেশ করা হয়েছে।');
+  };
+
   const promptLocationPicker = (callback: (address: Address) => void) => {
     setLocationCallback(() => callback);
     setLocationModalOpen(true);
@@ -607,6 +480,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentView,
         setCurrentView,
         products,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        resetProductsToDefault,
+        clearAllDemoData,
         cart,
         addToCart,
         removeFromCart,
@@ -627,6 +505,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deliveryZones,
         reviews,
         addReview,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
         isCartDrawerOpen,
         setIsCartDrawerOpen,
         isCheckoutOpen,

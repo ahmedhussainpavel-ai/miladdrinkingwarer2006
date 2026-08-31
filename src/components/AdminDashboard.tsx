@@ -33,7 +33,14 @@ import {
   Info, 
   Phone, 
   MapPin, 
-  UserCheck 
+  UserCheck,
+  Plus,
+  Trash2,
+  Save,
+  Tag,
+  Sliders,
+  X,
+  Database
 } from 'lucide-react';
 import { generateOrderInvoicePDF } from '../lib/pdfGenerator';
 import { 
@@ -47,11 +54,17 @@ import {
   generateInvoicePdfTemplate,
   generateSubscriptionReminderTemplate 
 } from '../lib/whatsappTemplates';
-import { Order, OrderStatus, WhatsAppNotificationStatus } from '../types';
+import { Order, OrderStatus, Product, WhatsAppNotificationStatus } from '../types';
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const { 
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    resetProductsToDefault,
+    clearAllDemoData,
     orders, 
     subscriptions, 
     factoryInventory, 
@@ -62,11 +75,48 @@ export const AdminDashboard: React.FC = () => {
     showToast
   } = useStore();
 
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'jars' | 'routes' | 'crm'>('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'products' | 'jars' | 'routes' | 'crm'>('overview');
   const [orderFilter, setOrderFilter] = useState<string>('all');
   const [whatsAppFilter, setWhatsAppFilter] = useState<'all' | 'sent' | 'pending' | 'failed'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
+  // Product Management State
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState<number>(0);
+  const [editDeposit, setEditDeposit] = useState<number>(0);
+  const [editName, setEditName] = useState<string>('');
+  const [editSubtitle, setEditSubtitle] = useState<string>('');
+  const [editInStock, setEditInStock] = useState<boolean>(true);
+
+  // New Product Modal State
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductSubtitle, setNewProductSubtitle] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState<'water_jar' | 'water_bottle' | 'dispenser' | 'accessories'>('water_jar');
+  const [newProductVolume, setNewProductVolume] = useState('20L');
+  const [newProductPrice, setNewProductPrice] = useState<number>(0);
+  const [newProductDeposit, setNewProductDeposit] = useState<number>(0);
+  const [newProductDesc, setNewProductDesc] = useState('');
+  const [newProductUnit, setNewProductUnit] = useState('জার');
+
+  // Quick Pricing Batch inputs
+  const [batch20LPrice, setBatch20LPrice] = useState<number>(() => products.find(p => p.id === 'prod-20l-jar')?.price || 0);
+  const [batch20LDeposit, setBatch20LDeposit] = useState<number>(() => products.find(p => p.id === 'prod-20l-jar')?.jarDeposit || 0);
+  const [batch5LPrice, setBatch5LPrice] = useState<number>(() => products.find(p => p.id === 'prod-5l-bottle')?.price || 0);
+  const [batchPumpPrice, setBatchPumpPrice] = useState<number>(() => products.find(p => p.id === 'prod-electric-pump')?.price || 0);
+
+  // Reset Confirmation State
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+
+  // Factory Stock Edit State
+  const [isEditingFactoryStock, setIsEditingFactoryStock] = useState(false);
+  const [stockTotalJars, setStockTotalJars] = useState(factoryInventory.total20LJars);
+  const [stockSterilized, setStockSterilized] = useState(factoryInventory.jarsInFactorySterilized);
+  const [stockBottling, setStockBottling] = useState(factoryInventory.jarsInBottlingLine);
+  const [stockCirculation, setStockCirculation] = useState(factoryInventory.jarsInCirculationWithCustomers);
+  const [stockWaterTds, setStockWaterTds] = useState(factoryInventory.currentWaterTDS);
+  const [stockWaterPh, setStockWaterPh] = useState(factoryInventory.currentWaterPH);
+
   // WhatsApp Preview / Trigger State
   const [selectedOrderForWhatsApp, setSelectedOrderForWhatsApp] = useState<Order | null>(null);
   const [whatsAppTriggerType, setWhatsAppTriggerType] = useState<'ORDER_PLACED' | 'OUT_FOR_DELIVERY' | 'DELIVERED'>('ORDER_PLACED');
@@ -74,11 +124,11 @@ export const AdminDashboard: React.FC = () => {
   const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
   const [whatsAppSuccessMessage, setWhatsAppSuccessMessage] = useState<string | null>(null);
 
-  // Quick Stats
+  // 100% Genuine and Fresh Stats
   const totalWaterDispatched = factoryInventory.todayProductionLiters;
-  const activeSubsCount = subscriptions.filter(s => s.status === 'active').length + 3849;
+  const activeSubsCount = subscriptions.filter(s => s.status === 'active').length;
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'confirmed');
-  const totalRevenue = orders.reduce((acc, o) => acc + o.totalAmount, 0) + 342500;
+  const totalRevenue = orders.filter(o => o.paymentStatus === 'paid' || o.status === 'delivered').reduce((acc, o) => acc + o.totalAmount, 0);
 
   // WhatsApp Operational Metrics
   const totalOrdersCount = orders.length;
@@ -215,6 +265,115 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Start editing a product inline
+  const handleStartEditProduct = (p: Product) => {
+    setEditingProductId(p.id);
+    setEditPrice(p.price);
+    setEditDeposit(p.jarDeposit || 0);
+    setEditName(p.name);
+    setEditSubtitle(p.subTitle || '');
+    setEditInStock(p.inStock);
+  };
+
+  // Save inline product edit
+  const handleSaveProductEdit = (id: string) => {
+    updateProduct(id, {
+      name: editName,
+      subTitle: editSubtitle,
+      price: Number(editPrice) || 0,
+      jarDeposit: Number(editDeposit) || 0,
+      inStock: editInStock
+    });
+    setEditingProductId(null);
+    showToast('success', 'পণ্য আপডেট হয়েছে', 'মূল্য ও তথ্যের পরিবর্তন সফলভাবে সংরক্ষিত হয়েছে।');
+  };
+
+  // Delete product
+  const handleDeleteProduct = (id: string, name: string) => {
+    if (window.confirm(`আপনি কি নিশ্চিত যে "${name}" পণ্যটি তালিকা থেকে মুছে ফেলতে চান?`)) {
+      deleteProduct(id);
+      showToast('info', 'পণ্য ডিলিট হয়েছে', `"${name}" পণ্যটি ক্যাটালগ থেকে মুছে ফেলা হয়েছে।`);
+    }
+  };
+
+  // Add new product
+  const handleAddNewProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProductName.trim()) {
+      showToast('error', 'পণ্যের নাম লিখুন', 'পণ্যের শিরোনাম দেওয়া বাধ্যতামূলক।');
+      return;
+    }
+
+    addProduct({
+      name: newProductName.trim(),
+      subTitle: newProductSubtitle.trim() || undefined,
+      description: newProductDesc.trim() || 'উচ্চমানের পরিশোধিত মিনারেল পানি',
+      category: newProductCategory,
+      volume: newProductVolume,
+      price: Number(newProductPrice) || 0,
+      jarDeposit: Number(newProductDeposit) || 0,
+      inStock: true,
+      unit: newProductUnit,
+      features: ['বিশুদ্ধ ও নিরাপদ', 'সিলেট শহরে হোম ডেলিভারি'],
+      iconName: newProductCategory === 'water_jar' ? 'Droplets' : newProductCategory === 'water_bottle' ? 'Wine' : 'Sparkles'
+    });
+
+    setIsAddProductModalOpen(false);
+    setNewProductName('');
+    setNewProductSubtitle('');
+    setNewProductPrice(0);
+    setNewProductDeposit(0);
+    setNewProductDesc('');
+    showToast('success', 'নতুন পণ্য যুক্ত হয়েছে', `"${newProductName}" সফলভাবে ক্যাটালগে যুক্ত হয়েছে।`);
+  };
+
+  // Apply batch pricing
+  const handleApplyBatchPricing = () => {
+    const p20 = products.find(p => p.id === 'prod-20l-jar' || p.category === 'water_jar');
+    const p5 = products.find(p => p.id === 'prod-5l-bottle' || p.category === 'water_bottle');
+    const pPump = products.find(p => p.id === 'prod-electric-pump' || p.category === 'dispenser');
+
+    if (p20) {
+      updateProduct(p20.id, {
+        price: Number(batch20LPrice) || 0,
+        jarDeposit: Number(batch20LDeposit) || 0
+      });
+    }
+    if (p5) {
+      updateProduct(p5.id, {
+        price: Number(batch5LPrice) || 0
+      });
+    }
+    if (pPump) {
+      updateProduct(pPump.id, {
+        price: Number(batchPumpPrice) || 0
+      });
+    }
+
+    showToast('success', 'মূল্যতালিকা আপডেট হয়েছে', 'সকল পণ্যের নতুন রেট ও জামানত সিস্টেমজুড়ে আপডেট হয়েছে।');
+  };
+
+  // Save Factory Stock
+  const handleSaveFactoryStock = () => {
+    updateFactoryInventory({
+      total20LJars: Number(stockTotalJars) || 0,
+      jarsInFactorySterilized: Number(stockSterilized) || 0,
+      jarsInBottlingLine: Number(stockBottling) || 0,
+      jarsInCirculationWithCustomers: Number(stockCirculation) || 0,
+      currentWaterTDS: Number(stockWaterTds) || 0,
+      currentWaterPH: Number(stockWaterPh) || 7.0
+    });
+    setIsEditingFactoryStock(false);
+    showToast('success', 'স্টক ডাটা সংরক্ষিত', 'ফ্যাক্টরি ইনভেন্টরি ও পানির মান সফলভাবে আপডেট হয়েছে।');
+  };
+
+  // Fresh reset action
+  const handleConfirmClearAllDemoData = () => {
+    clearAllDemoData();
+    setIsResetConfirmOpen(false);
+    showToast('info', 'সম্পূর্ণ ডাটা ফ্রেশ হয়েছে', 'সকল ডেমো অর্ডার, ব্যালেন্স ও হিস্টোরি শূন্য (০) করা হয়েছে। আপনি এখন সম্পূর্ণ নতুনভাবে পণ্য ও অর্ডার নিয়ন্ত্রণ করতে পারবেন।');
+  };
+
   return (
     <div className="py-8 bg-slate-900 text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -315,42 +474,64 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Admin Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveAdminTab('overview')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeAdminTab === 'overview' ? 'bg-cyan-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            📋 অর্ডার ও ডেলিভারি তালিকা ({orders.length})
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <button
+              onClick={() => setActiveAdminTab('overview')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeAdminTab === 'overview' ? 'bg-cyan-500 text-slate-950 font-extrabold shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              📋 অর্ডার ও ডেলিভারি তালিকা ({orders.length})
+            </button>
 
-          <button
-            onClick={() => setActiveAdminTab('jars')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeAdminTab === 'jars' ? 'bg-cyan-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            🔄 খালি জার ও কারখানা স্টক
-          </button>
+            <button
+              onClick={() => setActiveAdminTab('products')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeAdminTab === 'products' ? 'bg-cyan-500 text-slate-950 font-extrabold shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🏷️ পণ্য ও মূল্য কন্ট্রোল ({products.length})
+            </button>
 
-          <button
-            onClick={() => setActiveAdminTab('routes')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeAdminTab === 'routes' ? 'bg-cyan-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            🚚 ডেলিভারি রুট ও ড্রাইভার ({deliveryZones.length})
-          </button>
+            <button
+              onClick={() => setActiveAdminTab('jars')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeAdminTab === 'jars' ? 'bg-cyan-500 text-slate-950 font-extrabold shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🔄 খালি জার ও কারখানা স্টক
+            </button>
 
-          <button
-            onClick={() => setActiveAdminTab('crm')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeAdminTab === 'crm' ? 'bg-cyan-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            👥 গ্রাহক লেজার ও ফোন বুক
-          </button>
+            <button
+              onClick={() => setActiveAdminTab('routes')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeAdminTab === 'routes' ? 'bg-cyan-500 text-slate-950 font-extrabold shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🚚 ডেলিভারি রুট ও ড্রাইভার ({deliveryZones.length})
+            </button>
+
+            <button
+              onClick={() => setActiveAdminTab('crm')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeAdminTab === 'crm' ? 'bg-cyan-500 text-slate-950 font-extrabold shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              👥 গ্রাহক লেজার ও ফোন বুক
+            </button>
+          </div>
+
+          {/* Clear / Fresh State Trigger */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsResetConfirmOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-800/80 text-rose-300 text-xs font-bold transition-all cursor-pointer"
+            >
+              <Database className="w-3.5 h-3.5 text-rose-400" />
+              <span>সম্পূর্ণ ফ্রেশ ডাটা রিসেট</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab 1: Dispatch & Orders Management Queue */}
@@ -879,7 +1060,296 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 2: Empty Jar Inventory Balance */}
+        {/* Tab 2: Products & Pricing Controller */}
+        {activeAdminTab === 'products' && (
+          <div className="space-y-6">
+            
+            {/* Quick Batch Pricing Adjustment Card */}
+            <div className="bg-slate-800/90 rounded-3xl p-6 border border-slate-700 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-cyan-400" />
+                    <span>দ্রুত মূল্য নির্ধারণ ও জামানত কন্ট্রোল (Quick Pricing Update)</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    মূল পণ্যগুলোর রিফিল মূল্য ও খালি জারের সিকিউরিটি জামানত এক ক্লিকে আপডেট করুন।
+                  </p>
+                </div>
+                <button
+                  onClick={handleApplyBatchPricing}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-all shadow-md cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>মূল্য তালিকা সেভ করুন</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-700/80 space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-400">২০ লিটার জার রিফিল মূল্য (৳)</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-cyan-400">৳</span>
+                    <input 
+                      type="number"
+                      min="0"
+                      value={batch20LPrice}
+                      onChange={(e) => setBatch20LPrice(Number(e.target.value))}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-black text-white focus:outline-hidden focus:border-cyan-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400">বর্তমান: ৳{products.find(p => p.id === 'prod-20l-jar')?.price || 0}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-700/80 space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-400">২০ লিটার জারের সিকিউরিটি জামানত (৳)</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-cyan-400">৳</span>
+                    <input 
+                      type="number"
+                      min="0"
+                      value={batch20LDeposit}
+                      onChange={(e) => setBatch20LDeposit(Number(e.target.value))}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-black text-white focus:outline-hidden focus:border-cyan-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400">নতুন জার নিলে প্রযোজ্য: ৳{products.find(p => p.id === 'prod-20l-jar')?.jarDeposit || 0}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-700/80 space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-400">৫ লিটার মিনারেল বোতল (৳)</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-cyan-400">৳</span>
+                    <input 
+                      type="number"
+                      min="0"
+                      value={batch5LPrice}
+                      onChange={(e) => setBatch5LPrice(Number(e.target.value))}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-black text-white focus:outline-hidden focus:border-cyan-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400">বর্তমান: ৳{products.find(p => p.id === 'prod-5l-bottle')?.price || 0}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-700/80 space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-400">ইলেকট্রিক অটো পাম্প (৳)</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-cyan-400">৳</span>
+                    <input 
+                      type="number"
+                      min="0"
+                      value={batchPumpPrice}
+                      onChange={(e) => setBatchPumpPrice(Number(e.target.value))}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-black text-white focus:outline-hidden focus:border-cyan-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400">বর্তমান: ৳{products.find(p => p.id === 'prod-electric-pump')?.price || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Full Catalog Table */}
+            <div className="bg-slate-800/80 rounded-3xl p-6 border border-slate-700 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-cyan-400" />
+                    <span>ক্যাটালগে থাকা সমস্ত পণ্যের তালিকা ({products.length})</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    প্রতিটি পণ্যের নাম, রিফিল মূল্য, সিকিউরিটি জামানত ও স্টক স্ট্যাটাস পরিচালনা করুন।
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => resetProductsToDefault()}
+                    className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    ডিফল্ট পণ্য রিসেট
+                  </button>
+                  <button
+                    onClick={() => setIsAddProductModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ নতুন পণ্য যুক্ত করুন</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-900 text-slate-400 font-bold border-b border-slate-700">
+                    <tr>
+                      <th className="p-3">পণ্য ও বিবরণ</th>
+                      <th className="p-3">ক্যাটাগরি</th>
+                      <th className="p-3">পরিমাণ / ভলিউম</th>
+                      <th className="p-3">রিফিল মূল্য (৳)</th>
+                      <th className="p-3">সিকিউরিটি জামানত (৳)</th>
+                      <th className="p-3">স্টক স্ট্যাটাস</th>
+                      <th className="p-3 text-right">অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700">
+                    {products.map((prod) => {
+                      const isEditing = editingProductId === prod.id;
+                      return (
+                        <tr key={prod.id} className="hover:bg-slate-750/70 transition-colors">
+                          
+                          {/* Name & Title */}
+                          <td className="p-3">
+                            {isEditing ? (
+                              <div className="space-y-1.5 max-w-xs">
+                                <input
+                                  type="text"
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white font-bold"
+                                  placeholder="পণ্যের নাম"
+                                />
+                                <input
+                                  type="text"
+                                  value={editSubtitle}
+                                  onChange={(e) => setEditSubtitle(e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1 text-[11px] text-slate-300"
+                                  placeholder="সাব-টাইটেল"
+                                />
+                              </div>
+                            ) : (
+                              <div>
+                                <p className="font-bold text-white text-sm">{prod.name}</p>
+                                {prod.subTitle && <p className="text-[11px] text-slate-400">{prod.subTitle}</p>}
+                                <p className="text-[10px] text-slate-500 font-mono">ID: {prod.id}</p>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Category */}
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 rounded-full bg-slate-700/80 text-cyan-300 text-[10px] font-bold uppercase">
+                              {prod.category === 'water_jar' ? '২০ লিটার জার' : prod.category === 'water_bottle' ? 'পেট বোতল' : prod.category === 'dispenser' ? 'ডিসপেন্সার / পাম্প' : 'অন্যান্য'}
+                            </span>
+                          </td>
+
+                          {/* Volume */}
+                          <td className="p-3 font-mono font-bold text-slate-300">
+                            {prod.volume}
+                          </td>
+
+                          {/* Price */}
+                          <td className="p-3">
+                            {isEditing ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-cyan-400 font-bold">৳</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editPrice}
+                                  onChange={(e) => setEditPrice(Number(e.target.value))}
+                                  className="w-20 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs text-emerald-400 font-bold"
+                                />
+                              </div>
+                            ) : (
+                              <span className="font-black text-emerald-400 text-sm">
+                                ৳{prod.price}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Jar Deposit */}
+                          <td className="p-3">
+                            {isEditing ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-cyan-400 font-bold">৳</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editDeposit}
+                                  onChange={(e) => setEditDeposit(Number(e.target.value))}
+                                  className="w-20 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs text-cyan-400 font-bold"
+                                />
+                              </div>
+                            ) : (
+                              <span className="font-bold text-cyan-400">
+                                {prod.jarDeposit ? `৳${prod.jarDeposit}` : '—'}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Stock Status */}
+                          <td className="p-3">
+                            {isEditing ? (
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={editInStock}
+                                  onChange={(e) => setEditInStock(e.target.checked)}
+                                  className="w-4 h-4 text-cyan-500 rounded-sm"
+                                />
+                                <span className={editInStock ? 'text-emerald-400 font-bold' : 'text-rose-400'}>
+                                  {editInStock ? 'স্টকে আছে' : 'স্টক শেষ'}
+                                </span>
+                              </label>
+                            ) : (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                prod.inStock ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'
+                              }`}>
+                                {prod.inStock ? 'স্টকে আছে' : 'স্টক আউট'}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="p-3 text-right">
+                            {isEditing ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleSaveProductEdit(prod.id)}
+                                  className="p-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>সেভ</span>
+                                </button>
+                                <button
+                                  onClick={() => setEditingProductId(null)}
+                                  className="p-1.5 px-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs transition-all cursor-pointer"
+                                >
+                                  বাতিল
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleStartEditProduct(prod)}
+                                  className="p-1.5 px-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-cyan-300 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                  title="মূল্য ও তথ্য এডিট করুন"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>এডিট</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(prod.id, prod.name)}
+                                  className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-400 transition-colors cursor-pointer"
+                                  title="পণ্য মুছে ফেলুন"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* Tab 3: Empty Jar Inventory Balance */}
         {activeAdminTab === 'jars' && (
           <div className="space-y-6">
             <div className="bg-slate-800/80 rounded-3xl p-6 sm:p-8 border border-slate-700 space-y-6">
@@ -895,18 +1365,34 @@ export const AdminDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    updateFactoryInventory({
-                      jarsInFactorySterilized: factoryInventory.jarsInFactorySterilized + 500,
-                      todayProductionLiters: factoryInventory.todayProductionLiters + 10000
-                    });
-                    showToast('success', 'উৎপাদন যোগ হয়েছে', 'নতুন ৫০০টি জার পরিশোধিত স্টকে যোগ করা হয়েছে।');
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs cursor-pointer shadow-md"
-                >
-                  + নতুন ৫০০টি জার বোতলজাতকরণ রেকর্ড করুন
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setIsEditingFactoryStock(!isEditingFactoryStock);
+                      setStockTotalJars(factoryInventory.total20LJars);
+                      setStockSterilized(factoryInventory.jarsInFactorySterilized);
+                      setStockBottling(factoryInventory.jarsInBottlingLine);
+                      setStockCirculation(factoryInventory.jarsInCirculationWithCustomers);
+                      setStockWaterTds(factoryInventory.currentWaterTDS);
+                      setStockWaterPh(factoryInventory.currentWaterPH);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs cursor-pointer shadow-md"
+                  >
+                    {isEditingFactoryStock ? 'এডিট বাতিল' : '✏️ স্টক এডিট করুন'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateFactoryInventory({
+                        jarsInFactorySterilized: factoryInventory.jarsInFactorySterilized + 500,
+                        todayProductionLiters: factoryInventory.todayProductionLiters + 10000
+                      });
+                      showToast('success', 'উৎপাদন যোগ হয়েছে', 'নতুন ৫০০টি জার পরিশোধিত স্টকে যোগ করা হয়েছে।');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs cursor-pointer shadow-md"
+                  >
+                    + নতুন ৫০০টি জার রিফিল রেকর্ড
+                  </button>
+                </div>
               </div>
 
               {/* Jar Breakdown Cards */}
@@ -944,11 +1430,99 @@ export const AdminDashboard: React.FC = () => {
 
               </div>
 
+              {/* Editable Factory Stock Form */}
+              {isEditingFactoryStock && (
+                <div className="p-5 rounded-2xl bg-slate-900 border border-cyan-800/60 space-y-4">
+                  <h4 className="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                    <Edit3 className="w-4 h-4" />
+                    <span>ফ্যাক্টরি ইনভেন্টরি ও কোয়ালিটি প্যারামিটার পরিবর্তন করুন</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <label className="text-slate-400 font-bold block mb-1">মোট ২০ লিটার জার সংখ্যা</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={stockTotalJars}
+                        onChange={(e) => setStockTotalJars(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-bold block mb-1">জীবাণুমুক্ত রেডি জার</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={stockSterilized}
+                        onChange={(e) => setStockSterilized(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-bold block mb-1">বোতলজাত লাইনে</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={stockBottling}
+                        onChange={(e) => setStockBottling(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-bold block mb-1">গ্রাহকদের কাছে খালি জার</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={stockCirculation}
+                        onChange={(e) => setStockCirculation(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-bold block mb-1">লাইভ ওয়াটার TDS (ppm)</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={stockWaterTds}
+                        onChange={(e) => setStockWaterTds(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-bold block mb-1">লাইভ ওয়াটার pH লেভেল</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="14"
+                        value={stockWaterPh}
+                        onChange={(e) => setStockWaterPh(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      onClick={() => setIsEditingFactoryStock(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs"
+                    >
+                      বাতিল
+                    </button>
+                    <button
+                      onClick={handleSaveFactoryStock}
+                      className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs cursor-pointer shadow-md"
+                    >
+                      সংরক্ষণ করুন
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         )}
 
-        {/* Tab 3: Delivery Routes & Fleet Planner */}
+        {/* Tab 4: Delivery Routes & Fleet Planner */}
         {activeAdminTab === 'routes' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1001,37 +1575,48 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 4: Customer CRM & Empty Jar Ledger */}
+        {/* Tab 5: Customer CRM & Empty Jar Ledger */}
         {activeAdminTab === 'crm' && (
           <div className="space-y-4">
-            <div className="bg-slate-800/80 rounded-3xl p-6 border border-slate-700">
-              <h3 className="text-base font-bold text-white mb-4">গ্রাহক ফোনবুক ও খালি জারের ব্যালেন্স</h3>
+            <div className="bg-slate-800/80 rounded-3xl p-6 border border-slate-700 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-white">গ্রাহক ফোনবুক ও খালি জারের ব্যালেন্স</h3>
+                  <p className="text-xs text-slate-400">
+                    অর্ডার ও সাবস্ক্রিপশন করা গ্রাহকদের লাইভ লেজার এবং সরাসরি হোয়াটসঅ্যাপ কানেক্ট।
+                  </p>
+                </div>
+                <div className="text-xs text-slate-400">
+                  মোট নিবন্ধিত গ্রাহক: <span className="font-bold text-cyan-400">{orders.length > 0 ? Array.from(new Set(orders.map(o => o.customerPhone))).length : 0}</span> জন
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-900 text-slate-400 font-bold border-b border-slate-700">
                     <tr>
                       <th className="p-3">গ্রাহকের নাম</th>
                       <th className="p-3">ফোন ও ঠিকানা</th>
-                      <th className="p-3">খালি জার রয়েছে</th>
-                      <th className="p-3">ওয়ালেট জমার টাকা</th>
+                      <th className="p-3">মোট অর্ডার</th>
+                      <th className="p-3">খালি জারের হিসাব</th>
                       <th className="p-3">সিলেটের এলাকা</th>
                       <th className="p-3 text-right">হোয়াটসঅ্যাপ চ্যাট</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700">
-                    {[
-                      { name: 'আহমেদ হোসাইন পাভেল', phone: '+8801711102448', jars: '৩টি জার', wallet: '৳৪৫০', area: 'মিরবক্সটুলা, সিলেট' },
-                      { name: 'ডা. মাহফুজুর রহমান (পপুলার ডায়াগনস্টিক)', phone: '+8801711102448', jars: '১৪টি জার', wallet: '৳২,৮০০', area: 'জিন্দাবাজার, সিলেট' },
-                      { name: 'হোটেল গ্র্যান্ড সুরমা', phone: '+8801711102448', jars: '২৫টি জার', wallet: '৳৫,৫০০', area: 'আম্বরখানা, সিলেট' }
-                    ].map((cust, idx) => {
-                      const waLink = createWhatsAppChatUrl(cust.phone, `আসসালামু আলাইকুম ${cust.name}, মিলাদ ড্রিংকিং ওয়াটার (মিরবক্সটুলা, সিলেট) থেকে আপনার পানির সেবার বিষয়ে যোগাযোগ করা হচ্ছে।`);
+                    {/* Extract unique customers dynamically from orders */}
+                    {Array.from(new Map(orders.map(o => [o.customerPhone, o])).values()).map((ord: Order, idx: number) => {
+                      const custOrders = orders.filter(o => o.customerPhone === ord.customerPhone);
+                      const totalJarsOrdered = custOrders.reduce((acc, o) => acc + o.items.reduce((sum, item) => sum + (item.name.includes('জার') || item.volume === '20L' ? item.quantity : item.quantity), 0), 0);
+                      const waLink = createWhatsAppChatUrl(ord.customerPhone, `আসসালামু আলাইকুম ${ord.customerName}, মিলাদ ড্রিংকিং ওয়াটার (মিরবক্সটুলা, সিলেট) থেকে আপনার পানির সেবার বিষয়ে যোগাযোগ করা হচ্ছে।`);
+                      
                       return (
                         <tr key={idx} className="hover:bg-slate-750">
-                          <td className="p-3 font-bold text-white text-sm">{cust.name}</td>
-                          <td className="p-3 text-slate-300 font-mono">{cust.phone}</td>
-                          <td className="p-3 font-black text-cyan-400">{cust.jars}</td>
-                          <td className="p-3 font-bold text-emerald-400">{cust.wallet}</td>
-                          <td className="p-3 text-slate-300">{cust.area}</td>
+                          <td className="p-3 font-bold text-white text-sm">{ord.customerName}</td>
+                          <td className="p-3 text-slate-300 font-mono">{ord.customerPhone}</td>
+                          <td className="p-3 font-bold text-emerald-400">{custOrders.length}টি অর্ডার</td>
+                          <td className="p-3 font-black text-cyan-400">{totalJarsOrdered}টি আইটেম</td>
+                          <td className="p-3 text-slate-300">{ord.deliveryAddress?.addressLine || ord.deliveryZone || 'সিলেট'}</td>
                           <td className="p-3 text-right">
                             <a 
                               href={waLink} 
@@ -1046,6 +1631,13 @@ export const AdminDashboard: React.FC = () => {
                         </tr>
                       );
                     })}
+                    {orders.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-slate-400">
+                          কোন গ্রাহকের ডাটা নেই। গ্রাহক নতুন অর্ডার অথবা সাইনআপ করলে স্বয়ংক্রিয়ভাবে এখানে যুক্ত হবে।
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1054,6 +1646,163 @@ export const AdminDashboard: React.FC = () => {
         )}
 
       </div>
+
+      {/* Add New Product Modal */}
+      {isAddProductModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Plus className="w-4 h-4 text-emerald-400" />
+                <span>নতুন পণ্য যুক্ত করুন</span>
+              </h3>
+              <button 
+                onClick={() => setIsAddProductModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddNewProductSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="text-slate-300 font-bold block mb-1">পণ্যের নাম *</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="যেমন: ২০ লিটার পরিশোধিত জার পানি"
+                  value={newProductName}
+                  onChange={(e) => setNewProductName(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-hidden focus:border-cyan-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">সাব-টাইটেল / সংক্ষিপ্ত বিবরণ</label>
+                  <input 
+                    type="text"
+                    placeholder="যেমন: RO + UV রিফিল"
+                    value={newProductSubtitle}
+                    onChange={(e) => setNewProductSubtitle(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-hidden focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">ক্যাটাগরি</label>
+                  <select
+                    value={newProductCategory}
+                    onChange={(e: any) => setNewProductCategory(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-hidden focus:border-cyan-500"
+                  >
+                    <option value="water_jar">২০ লিটার জার</option>
+                    <option value="water_bottle">পেট বোতল (৫ লিটার / ১.৫ লিটার)</option>
+                    <option value="dispenser">ডিসপেন্সার / পাম্প</option>
+                    <option value="accessories">অন্যান্য এক্সেসরিজ</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">ভলিউম</label>
+                  <input 
+                    type="text"
+                    placeholder="20L"
+                    value={newProductVolume}
+                    onChange={(e) => setNewProductVolume(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-hidden focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">রিফিল মূল্য (৳) *</label>
+                  <input 
+                    type="number"
+                    min="0"
+                    required
+                    value={newProductPrice}
+                    onChange={(e) => setNewProductPrice(Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-bold focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">জামানত (৳)</label>
+                  <input 
+                    type="number"
+                    min="0"
+                    value={newProductDeposit}
+                    onChange={(e) => setNewProductDeposit(Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-cyan-400 font-bold focus:outline-hidden focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-bold block mb-1">বিস্তারিত বিবরণ</label>
+                <textarea 
+                  rows={2}
+                  placeholder="উৎকৃষ্ট ও সুপেয় মিনারেল পানি..."
+                  value={newProductDesc}
+                  onChange={(e) => setNewProductDesc(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-hidden focus:border-cyan-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsAddProductModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-md cursor-pointer"
+                >
+                  পণ্য সেভ করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Demo Data Confirmation Modal */}
+      {isResetConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs">
+          <div className="bg-slate-900 border border-rose-800/80 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="w-10 h-10 rounded-2xl bg-rose-950/80 border border-rose-800 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">সম্পূর্ণ ডাটা ফ্রেশ রিসেট করবেন?</h3>
+                <p className="text-[11px] text-rose-300">Clean Slate & Fresh Start</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              এটি নিশ্চিত করলে সকল ডেমো অর্ডার তালিকা, ডেমো সাবস্ক্রিপশন, ব্যালেন্স এবং পূর্বের হিস্টোরি সম্পূর্ণ মুছে ফেলে সিস্টেমকে একটি একদম ফ্রেশ অবস্থায় নিয়ে আসা হবে। এডমিন নিজেই পরে রিয়েল তথ্য ও মূল্য এন্ট্রি করতে পারবেন।
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setIsResetConfirmOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={handleConfirmClearAllDemoData}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg shadow-rose-950 cursor-pointer"
+              >
+                হ্যাঁ, সম্পূর্ণ ফ্রেশ রিসেট করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Interactive WhatsApp Dispatch & Template Preview Modal */}
       {selectedOrderForWhatsApp && (

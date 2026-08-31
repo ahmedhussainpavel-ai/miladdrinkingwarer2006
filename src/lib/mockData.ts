@@ -124,15 +124,15 @@ export const DEFAULT_PRODUCTS: Product[] = [
 ];
 
 export const DEFAULT_FACTORY_INVENTORY: FactoryJarInventory = {
-  total20LJars: 18450,
-  jarsInFactorySterilized: 4200,
-  jarsInBottlingLine: 1850,
-  jarsInCirculationWithCustomers: 12150,
-  damagedOrRecycledJars: 250,
-  total5LUnits: 6800,
-  todayProductionLiters: 48500,
-  activeVehiclesOnRoad: 14,
-  currentWaterTDS: 28, // ppm
+  total20LJars: 0,
+  jarsInFactorySterilized: 0,
+  jarsInBottlingLine: 0,
+  jarsInCirculationWithCustomers: 0,
+  damagedOrRecycledJars: 0,
+  total5LUnits: 0,
+  todayProductionLiters: 0,
+  activeVehiclesOnRoad: 0,
+  currentWaterTDS: 28, // ppm standard
   currentWaterPH: 7.4
 };
 
@@ -238,81 +238,8 @@ export const DEFAULT_REVIEWS: CustomerReview[] = [
   }
 ];
 
-export const DEFAULT_SAMPLE_ADDRESSES: Address[] = [
-  {
-    id: 'addr-1',
-    tag: 'Home',
-    recipientName: 'আহমেদ হোসেন পাবেল',
-    phone: '+8801711102448',
-    addressLine: 'বাড়ি নম্বর ১২, রোড ৩, মিরবক্সটুলা',
-    floorUnit: '৪র্থ তলা (ফ্ল্যাট ৪বি)',
-    area: 'মিরবক্সটুলা',
-    city: 'সিলেট',
-    postalCode: '৩১০০',
-    lat: 24.8949,
-    lng: 91.8687,
-    isDefault: true,
-    instructions: 'দরজার বেল বাজাবেন। দরজার পাশে ২টি খালি জার রাখা আছে।'
-  },
-  {
-    id: 'addr-2',
-    tag: 'Office',
-    recipientName: 'মিলাদ ট্রেডিং অ্যান্ড আইটি',
-    phone: '+8801711102448',
-    addressLine: 'সিটি সেন্টার টাওয়ার, জিন্দাবাজার',
-    floorUnit: 'লেভেল ৫, রুম ৫০২',
-    area: 'জিন্দাবাজার',
-    city: 'সিলেট',
-    postalCode: '৩১০০',
-    lat: 24.8965,
-    lng: 91.8710,
-    isDefault: false,
-    instructions: 'সকাল ৯টা থেকে বিকাল ৫টার মধ্যে রিসেপশনে ডেলিভারি দিন।'
-  }
-];
+export const DEFAULT_SAMPLE_ADDRESSES: Address[] = [];
 
-export const DEFAULT_REFERRAL_INVITES: ReferralInvite[] = [
-  {
-    id: 'ref-inv-1',
-    referrerUserId: 'demo-customer-ahmed',
-    referralCode: 'MILAD-SYLHET-50',
-    friendName: 'মাহফুজ আলম',
-    friendContact: '+8801711102448',
-    channel: 'whatsapp',
-    status: 'reward_claimed',
-    discountGiven: 50,
-    rewardEarned: 50,
-    invitedAt: '2026-08-10T14:20:00.000Z',
-    completedAt: '2026-08-12T11:05:00.000Z',
-    note: 'মিরবক্সটুলা ফ্ল্যাটে ২ জার ২০ লিটার পানি অর্ডার করেছে'
-  },
-  {
-    id: 'ref-inv-2',
-    referrerUserId: 'demo-customer-ahmed',
-    referralCode: 'MILAD-SYLHET-50',
-    friendName: 'ফারহানা ইয়াসমিন',
-    friendContact: '+8801711102448',
-    channel: 'whatsapp',
-    status: 'ordered',
-    discountGiven: 50,
-    rewardEarned: 50,
-    invitedAt: '2026-08-20T09:15:00.000Z',
-    completedAt: '2026-08-26T16:40:00.000Z',
-    note: 'জিন্দাবাজার অফিসে প্রথম ডেলিভারি সম্পন্ন'
-  },
-  {
-    id: 'ref-inv-3',
-    referrerUserId: 'demo-customer-ahmed',
-    referralCode: 'MILAD-SYLHET-50',
-    friendName: 'সাজিদ মাহমুদ',
-    friendContact: '+8801711102448',
-    channel: 'sms',
-    status: 'registered',
-    discountGiven: 50,
-    rewardEarned: 50,
-    invitedAt: '2026-08-24T18:00:00.000Z',
-    note: 'রেজিস্ট্রেশন সম্পন্ন, আম্বরখানায় ডেলিভারি নেবে'
-  }
-];
+export const DEFAULT_REFERRAL_INVITES: ReferralInvite[] = [];
 
 

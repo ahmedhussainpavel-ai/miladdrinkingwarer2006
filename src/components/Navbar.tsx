@@ -1,42 +1,40 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore, AppView } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { MiladLogo } from './MiladLogo';
 import { AuthModal } from './AuthModal';
 import { 
-  Droplet, 
   ShoppingCart, 
   User, 
   ShieldCheck, 
   Layers, 
   Menu, 
   X, 
-  Calendar, 
-  Calculator, 
   Sparkles, 
-  Package, 
   LogOut,
   Wallet,
   RotateCcw,
-  MapPin,
-  MessageSquare,
   PhoneCall,
   ChevronDown,
-  Info,
-  Clock,
-  ArrowRight
+  Globe,
+  ArrowRight,
+  MessageSquare,
+  WifiOff
 } from 'lucide-react';
+import { useNetworkStatus } from '../lib/useNetworkStatus';
 import { createWhatsAppChatUrl } from '../lib/whatsapp';
 import { trackWhatsAppClick, trackPhoneCall } from '../lib/analytics';
 
 export const Navbar: React.FC = () => {
-  const { currentView, setCurrentView, cartTotal, setIsCartDrawerOpen } = useStore();
+  const { currentView, setCurrentView, cartTotal, setIsCartDrawerOpen, isAuthModalOpen, setIsAuthModalOpen } = useStore();
   const { user, signOut, loginAsDemoUser } = useAuth();
+  const { language, setLanguage, toggleLanguage, t, formatCurrency, formatNumber } = useLanguage();
+  const { isOffline } = useNetworkStatus();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -56,54 +54,66 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const primaryNavItems: { label: string; view: AppView }[] = [
-    { label: 'হোম', view: 'home' },
-    { label: 'পণ্য তালিকা', view: 'products' },
-    { label: 'মাসিক প্যাকেজ', view: 'subscriptions' },
-    { label: 'ক্যালকুলেটর', view: 'calculator' },
+    { label: t.nav.home, view: 'home' },
+    { label: t.nav.products, view: 'products' },
+    { label: t.nav.subscriptions, view: 'subscriptions' },
+    { label: t.nav.calculator, view: 'calculator' },
   ];
 
   const secondaryNavItems: { label: string; view: AppView; icon: any; badge?: string; desc?: string }[] = [
     { 
-      label: 'অনুষ্ঠান ও কর্পোরেট অর্ডার', 
+      label: t.nav.events, 
       view: 'events', 
       icon: Sparkles,
-      desc: 'বিয়ে, সেমিনার ও পার্টির জন্য স্পেশাল সাপ্লাই'
+      desc: language === 'bn' ? 'বিয়ে, সেমিনার ও পার্টির জন্য স্পেশাল সাপ্লাই' : 'Special bulk supply for weddings and seminars'
     },
     { 
-      label: 'ল্যাব টেস্ট ও বিশুদ্ধতা', 
+      label: t.nav.quality, 
       view: 'quality', 
       icon: ShieldCheck,
-      desc: 'বিএসটিআই মান ও ৭-ধাপের ফিল্ট্রেশন রিপোর্ট' 
+      desc: language === 'bn' ? 'বিএসটিআই মান ও ৭-ধাপের ফিল্ট্রেশন রিপোর্ট' : 'BSTI standards and 7-stage filtration lab test' 
     },
     { 
-      label: 'রেফার বোনাস (৳৫০)', 
+      label: t.nav.referrals, 
       view: 'customer_portal', 
       icon: Sparkles, 
-      badge: 'বোনাস',
-      desc: 'বন্ধুদের রেফার করে ওয়ালেট ব্যালেন্স জিতুন'
+      badge: language === 'bn' ? 'বোনাস' : 'Bonus',
+      desc: language === 'bn' ? 'বন্ধুদের রেফার করে ওয়ালেট ব্যালেন্স জিতুন' : 'Refer friends and earn wallet credits'
     },
     { 
-      label: 'ফ্যাক্টরি এডমিন প্যানেল', 
+      label: t.nav.admin, 
       view: 'admin_dashboard', 
       icon: Layers,
-      desc: 'ম্যানেজমেন্ট, ডেলিভারি ও ইনভয়েস কনসোল'
+      desc: language === 'bn' ? 'ম্যানেজমেন্ট, ডেলিভারি ও ইনভয়েস কনসোল' : 'Plant operations, route dispatch and invoices'
     },
   ];
 
   const userInitial = user?.displayName ? user.displayName.trim().charAt(0).toUpperCase() : 'U';
 
+  const handleCallHotline = () => {
+    trackPhoneCall('navbar_hotline', '+8801711102448');
+  };
+
+  const handleWhatsAppQuickChat = () => {
+    trackWhatsAppClick('navbar_whatsapp', 'general_query');
+    const msg = language === 'bn' 
+      ? 'আসসালামু আলাইকুম, আমি মিলাদ ড্রিংকিং ওয়াটার (মিরবক্সটুলা, সিলেট) থেকে খাবার পানি নিতে চাই।'
+      : 'Hello, I want to order mineral drinking water from Milad Drinking Water (Mirboxtula, Sylhet).';
+    window.open(createWhatsAppChatUrl('+8801711102448', msg), '_blank');
+  };
+
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs transition-all">
         
         {/* Main Clean Navigation Bar */}
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-15 sm:h-17 gap-2 sm:gap-4">
+          <div className="flex items-center justify-between h-16 sm:h-18 gap-2 sm:gap-4">
             
             {/* Brand Logo & Name (Left) */}
             <div 
               onClick={() => { setCurrentView('home'); setMobileMenuOpen(false); }}
-              className="cursor-pointer group select-none shrink-0 transition-opacity hover:opacity-90 flex items-center"
+              className="cursor-pointer group select-none shrink-0 transition-opacity hover:opacity-95 flex items-center"
             >
               <div className="hidden sm:block">
                 <MiladLogo size="md" />
@@ -121,15 +131,15 @@ export const Navbar: React.FC = () => {
                   <button
                     key={item.view}
                     onClick={() => setCurrentView(item.view)}
-                    className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all relative cursor-pointer ${
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all relative cursor-pointer ${
                       isActive
-                        ? 'text-cyan-900 bg-cyan-50/90 font-bold'
+                        ? 'text-sky-900 bg-sky-50 font-bold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
                     <span>{item.label}</span>
                     {isActive && (
-                      <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-cyan-600 rounded-full"></span>
+                      <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-sky-600 rounded-full"></span>
                     )}
                   </button>
                 );
@@ -139,16 +149,16 @@ export const Navbar: React.FC = () => {
               <div className="relative" ref={moreMenuRef}>
                 <button
                   onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                     moreDropdownOpen ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <span>অন্যান্য সেবা</span>
+                  <span>{t.nav.moreServices}</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${moreDropdownOpen ? 'rotate-180 text-slate-700' : ''}`} />
                 </button>
 
                 {moreDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-100 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-0 mt-2 w-76 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
                     {secondaryNavItems.map((item) => {
                       const Icon = item.icon;
                       return (
@@ -163,12 +173,12 @@ export const Navbar: React.FC = () => {
                           }}
                           className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors cursor-pointer group"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-cyan-50 group-hover:bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 mt-0.5 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-sky-50 group-hover:bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 mt-0.5 transition-colors">
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-xs font-bold text-slate-800 group-hover:text-cyan-900">
+                              <span className="text-xs font-bold text-slate-900 group-hover:text-sky-900">
                                 {item.label}
                               </span>
                               {item.badge && (
@@ -194,20 +204,43 @@ export const Navbar: React.FC = () => {
             {/* Right Action Hub */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               
+              {/* Offline Mode Indicator Badge */}
+              {isOffline && (
+                <div 
+                  className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-amber-100/90 text-amber-900 border border-amber-300 text-xs font-extrabold shadow-2xs animate-pulse"
+                  title={language === 'bn' ? 'ইন্টারনেট অফলাইন - ক্যাশড ক্যাটালগ মোড সক্রিয়' : 'Offline - Viewing cached product catalog'}
+                >
+                  <WifiOff className="w-3.5 h-3.5 text-amber-700" />
+                  <span className="hidden sm:inline">{language === 'bn' ? 'অফলাইন' : 'Offline'}</span>
+                </div>
+              )}
+
+              {/* Language Switcher Pill (বাং / EN) */}
+              <button
+                onClick={toggleLanguage}
+                title={language === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-slate-200 hover:border-sky-400 bg-slate-50 hover:bg-sky-50/60 text-slate-700 hover:text-sky-900 text-xs font-bold transition-all cursor-pointer select-none"
+              >
+                <Globe className="w-3.5 h-3.5 text-sky-600" />
+                <span className={language === 'bn' ? 'text-sky-700 font-extrabold' : 'text-slate-500'}>বাং</span>
+                <span className="text-slate-300">|</span>
+                <span className={language === 'en' ? 'text-sky-700 font-extrabold' : 'text-slate-500'}>EN</span>
+              </button>
+
               {/* Shopping Cart Trigger */}
               <button
                 onClick={() => setIsCartDrawerOpen(true)}
-                className="relative p-2 sm:p-2.5 rounded-xl text-slate-700 bg-slate-50 hover:bg-cyan-50 hover:text-cyan-800 border border-slate-200/80 transition-all flex items-center gap-1.5 cursor-pointer group shrink-0"
-                aria-label="Shopping Cart"
+                className="relative p-2 sm:p-2.5 rounded-xl text-slate-700 bg-slate-50 hover:bg-sky-50 hover:text-sky-800 border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer group shrink-0"
+                aria-label={t.nav.cart}
               >
-                <ShoppingCart className="w-4.5 h-4.5 text-slate-600 group-hover:text-cyan-700 transition-colors" />
+                <ShoppingCart className="w-4.5 h-4.5 text-slate-600 group-hover:text-sky-700 transition-colors" />
                 {cartTotal.totalBottles > 0 ? (
                   <>
                     <span className="hidden xl:inline text-xs font-bold text-slate-900">
-                      ৳{cartTotal.grandTotal}
+                      {formatCurrency(cartTotal.grandTotal)}
                     </span>
                     <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[10px] font-extrabold h-4.5 min-w-4.5 px-1 rounded-full flex items-center justify-center shadow-xs">
-                      {cartTotal.totalBottles}
+                      {formatNumber(cartTotal.totalBottles)}
                     </span>
                   </>
                 ) : null}
@@ -219,7 +252,7 @@ export const Navbar: React.FC = () => {
                   <div>
                     <button
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl border border-slate-200 hover:border-cyan-400 bg-slate-50 hover:bg-white transition-all cursor-pointer shrink-0"
+                      className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl border border-slate-200 hover:border-sky-400 bg-slate-50 hover:bg-white transition-all cursor-pointer shrink-0"
                       aria-label="User profile menu"
                     >
                       {user.photoURL ? (
@@ -229,7 +262,7 @@ export const Navbar: React.FC = () => {
                           className="w-7 h-7 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="w-7 h-7 rounded-lg bg-cyan-700 text-white text-xs font-bold flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-lg bg-sky-700 text-white text-xs font-bold flex items-center justify-center">
                           {userInitial}
                         </div>
                       )}
@@ -238,27 +271,27 @@ export const Navbar: React.FC = () => {
 
                     {/* Dropdown Profile Menu */}
                     {userDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-68 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-100 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                         
                         {/* User Info Header */}
-                        <div className="p-3 bg-slate-50/90 rounded-xl mb-2 border border-slate-200/60">
+                        <div className="p-3 bg-slate-50 rounded-xl mb-2 border border-slate-200/80">
                           <div className="flex items-center justify-between">
-                            <p className="text-[11px] font-semibold text-slate-500">অ্যাকাউন্ট</p>
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800">
-                              {user.role === 'admin' ? 'এডমিন' : 'গ্রাহক'}
+                            <p className="text-[11px] font-semibold text-slate-500">{t.myAccount}</p>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800">
+                              {user.role === 'admin' ? (language === 'bn' ? 'অ্যাডমিন' : 'Admin') : (language === 'bn' ? 'গ্রাহক' : 'Customer')}
                             </span>
                           </div>
                           <p className="text-sm font-extrabold text-slate-900 truncate mt-0.5">{user.displayName}</p>
                           <p className="text-[11px] text-slate-500 truncate">{user.phone || user.email}</p>
                           
-                          <div className="mt-2.5 pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                          <div className="mt-2.5 pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
                             <div className="flex items-center gap-1.5 text-slate-700">
-                              <Wallet className="w-3.5 h-3.5 text-cyan-600" />
-                              <span>ওয়ালেট: <strong className="text-slate-900">৳{user.walletBalance}</strong></span>
+                              <Wallet className="w-3.5 h-3.5 text-sky-600" />
+                              <span>{t.nav.wallet}: <strong className="text-slate-900">{formatCurrency(user.walletBalance)}</strong></span>
                             </div>
                             <div className="flex items-center gap-1.5 text-slate-700">
                               <RotateCcw className="w-3.5 h-3.5 text-teal-600" />
-                              <span>জার: <strong className="text-teal-700">{user.emptyJarsHeld?.jar20L || 0}টি</strong></span>
+                              <span>{t.nav.jarsHeld}: <strong className="text-teal-700">{formatNumber(user.emptyJarsHeld?.jar20L || 0)}</strong></span>
                             </div>
                           </div>
                         </div>
@@ -269,11 +302,11 @@ export const Navbar: React.FC = () => {
                             setCurrentView('customer_portal');
                             setUserDropdownOpen(false);
                           }}
-                          className="w-full text-left px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-cyan-50 hover:text-cyan-900 rounded-xl flex items-center justify-between transition-colors cursor-pointer"
+                          className="w-full text-left px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-sky-50 hover:text-sky-900 rounded-xl flex items-center justify-between transition-colors cursor-pointer"
                         >
                           <div className="flex items-center gap-2.5">
-                            <User className="w-4 h-4 text-cyan-600" />
-                            <span>আমার ড্যাশবোর্ড ও অর্ডার</span>
+                            <User className="w-4 h-4 text-sky-600" />
+                            <span>{t.nav.myOrders}</span>
                           </div>
                           <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                         </button>
@@ -289,7 +322,7 @@ export const Navbar: React.FC = () => {
                         >
                           <div className="flex items-center gap-2.5">
                             <Layers className="w-4 h-4 text-amber-500" />
-                            <span>ফ্যাক্টরি এডমিন প্যানেল</span>
+                            <span>{t.nav.admin}</span>
                           </div>
                           <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                         </button>
@@ -305,18 +338,18 @@ export const Navbar: React.FC = () => {
                           className="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                         >
                           <LogOut className="w-4 h-4 text-rose-500" />
-                          <span>লগআউট (Sign Out)</span>
+                          <span>{t.logout}</span>
                         </button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <button
-                    onClick={() => setAuthModalOpen(true)}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0"
                   >
                     <User className="w-3.5 h-3.5 text-slate-600" />
-                    <span>লগইন</span>
+                    <span>{t.login}</span>
                   </button>
                 )}
               </div>
@@ -338,6 +371,32 @@ export const Navbar: React.FC = () => {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 shadow-xl animate-in slide-in-from-top-2 duration-150">
             
+            {/* Language Toggle in Mobile */}
+            <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-sky-600" />
+                {language === 'bn' ? 'ভাষা পরিবর্তন করুন (Language)' : 'Select Language'}
+              </span>
+              <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
+                <button
+                  onClick={() => setLanguage('bn')}
+                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                    language === 'bn' ? 'bg-sky-600 text-white' : 'text-slate-600'
+                  }`}
+                >
+                  বাংলা
+                </button>
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                    language === 'en' ? 'bg-sky-600 text-white' : 'text-slate-600'
+                  }`}
+                >
+                  English
+                </button>
+              </div>
+            </div>
+
             {/* Navigation Links Grid */}
             <div className="grid grid-cols-2 gap-2 pt-1">
               {primaryNavItems.map((item) => {
@@ -351,7 +410,7 @@ export const Navbar: React.FC = () => {
                     }}
                     className={`p-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
                       isActive
-                        ? 'bg-cyan-50 text-cyan-900 border border-cyan-200'
+                        ? 'bg-sky-50 text-sky-900 border border-sky-200'
                         : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
@@ -364,7 +423,7 @@ export const Navbar: React.FC = () => {
 
             {/* Secondary Services in Mobile */}
             <div className="space-y-1.5 pt-2 border-t border-slate-100">
-              <p className="text-[11px] font-bold text-slate-400 px-1 uppercase tracking-wider">অন্যান্য সেবা</p>
+              <p className="text-[11px] font-bold text-slate-400 px-1 uppercase tracking-wider">{t.nav.moreServices}</p>
               {secondaryNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -380,7 +439,7 @@ export const Navbar: React.FC = () => {
                     className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-center justify-between text-xs font-semibold text-slate-700 cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className="w-4 h-4 text-cyan-600" />
+                      <Icon className="w-4 h-4 text-sky-600" />
                       <span>{item.label}</span>
                     </div>
                     {item.badge ? (
@@ -403,15 +462,15 @@ export const Navbar: React.FC = () => {
                     setCurrentView('customer_portal');
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer"
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-700 text-white text-xs font-bold flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-sky-700 text-white text-xs font-bold flex items-center justify-center">
                       {userInitial}
                     </div>
                     <div className="text-left">
                       <p className="text-xs font-bold text-slate-900">{user.displayName}</p>
-                      <p className="text-[11px] text-cyan-700 font-medium">ওয়ালেট: ৳{user.walletBalance}</p>
+                      <p className="text-[11px] text-sky-700 font-medium">{t.nav.wallet}: {formatCurrency(user.walletBalance)}</p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-slate-400" />
@@ -419,36 +478,34 @@ export const Navbar: React.FC = () => {
               ) : (
                 <button
                   onClick={() => {
-                    setAuthModalOpen(true);
+                    setIsAuthModalOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                 >
                   <User className="w-4 h-4" />
-                  <span>লগইন বা একাউন্ট খুলুন</span>
+                  <span>{t.nav.loginRegister}</span>
                 </button>
               )}
             </div>
 
-            {/* Hotline in Mobile Drawer */}
+            {/* Hotline & WhatsApp in Mobile Drawer */}
             <div className="pt-2 border-t border-slate-100 flex gap-2">
               <a
                 href="tel:+8801711102448"
-                onClick={() => trackPhoneCall('navbar_drawer', '+8801711102448')}
+                onClick={handleCallHotline}
                 className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
                 <span>০১৭১১-১০২৪৪৮</span>
               </a>
-              <a
-                href="https://wa.me/8801711102448"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 px-3 rounded-xl bg-teal-600 text-white text-xs font-bold flex items-center justify-center gap-1.5"
+              <button
+                onClick={handleWhatsAppQuickChat}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-teal-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5 fill-white" />
-                <span>হোয়াটসঅ্যাপ</span>
-              </a>
+                <span>{t.whatsApp}</span>
+              </button>
             </div>
 
           </div>
@@ -457,8 +514,8 @@ export const Navbar: React.FC = () => {
 
       {/* Global Auth Modal */}
       <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </>
   );

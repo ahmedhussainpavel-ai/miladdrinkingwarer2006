@@ -1,9 +1,10 @@
 import React from 'react';
 import { useStore, AppView } from '../context/StoreContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Home, 
   Package, 
-  Calendar, 
+  CalendarClock, 
   User, 
   ShoppingCart,
   PhoneCall
@@ -11,72 +12,118 @@ import {
 
 export const MobileBottomNav: React.FC = () => {
   const { currentView, setCurrentView, cartTotal, setIsCartDrawerOpen } = useStore();
+  const { t, formatCurrency, formatNumber } = useLanguage();
 
-  const navItems: { label: string; view: AppView; icon: React.FC<{ className?: string }> }[] = [
-    { label: 'হোম', view: 'home', icon: Home },
-    { label: 'পণ্য ও অর্ডার', view: 'products', icon: Package },
-    { label: 'সাবস্ক্রিপশন', view: 'subscriptions', icon: Calendar },
-    { label: 'গ্রাহক ড্যাশবোর্ড', view: 'customer_portal', icon: User },
+  const navItems: {
+    id: AppView;
+    title: string;
+    icon: React.FC<{ className?: string }>;
+    activeColor: string;
+    activeBg: string;
+  }[] = [
+    {
+      id: 'home',
+      title: t.nav.home,
+      icon: Home,
+      activeColor: 'text-sky-600',
+      activeBg: 'bg-sky-50'
+    },
+    {
+      id: 'products',
+      title: t.nav.products,
+      icon: Package,
+      activeColor: 'text-teal-600',
+      activeBg: 'bg-teal-50'
+    },
+    {
+      id: 'subscriptions',
+      title: t.nav.subscriptions,
+      icon: CalendarClock,
+      activeColor: 'text-indigo-600',
+      activeBg: 'bg-indigo-50'
+    },
+    {
+      id: 'customer_portal',
+      title: t.nav.dashboard,
+      icon: User,
+      activeColor: 'text-violet-600',
+      activeBg: 'bg-violet-50'
+    },
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl py-1 px-2 safe-area-pb">
-      <div className="max-w-md mx-auto flex items-center justify-around">
+    <nav 
+      aria-label="Mobile Navigation Bar" 
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] pb-[max(env(safe-area-inset-bottom,0px),0.25rem)] select-none"
+    >
+      <div className="max-w-lg mx-auto px-3 h-16 flex items-center justify-between gap-1">
+        
+        {/* Core Iconic Navigation Tabs */}
         {navItems.map((item) => {
-          const isActive = currentView === item.view;
+          const isActive = currentView === item.id;
           const Icon = item.icon;
 
           return (
             <button
-              key={item.view}
-              onClick={() => setCurrentView(item.view)}
-              className={`flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl transition-all active:scale-95 cursor-pointer ${
+              key={item.id}
+              onClick={() => setCurrentView(item.id)}
+              aria-label={item.title}
+              title={item.title}
+              className={`relative flex-1 flex flex-col items-center justify-center h-12 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${
                 isActive
-                  ? 'text-cyan-700 font-black'
-                  : 'text-slate-500 hover:text-slate-900 font-medium'
+                  ? `${item.activeBg} ${item.activeColor}`
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
               }`}
             >
-              <div className={`p-1 rounded-xl transition-all ${isActive ? 'bg-cyan-100 text-cyan-800' : ''}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] sm:text-[11px] leading-none whitespace-nowrap">
-                {item.label}
-              </span>
+              <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110 stroke-[2.4]' : 'stroke-[1.8]'}`} />
+
+              {/* Active Indicator Micro-Pill */}
+              {isActive && (
+                <span className="absolute bottom-1 w-3 h-1 rounded-full bg-current" />
+              )}
             </button>
           );
         })}
 
-        {/* Floating Cart Button in Bottom Nav */}
+        {/* Dynamic Money & Cart Iconic Button */}
         <button
           onClick={() => setIsCartDrawerOpen(true)}
-          className="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 text-slate-600 hover:text-cyan-700 rounded-xl transition-all active:scale-95 cursor-pointer relative"
-          aria-label="শপিং কার্ট দেখুন"
+          aria-label={t.cart.title}
+          title={cartTotal.totalBottles > 0 ? `${formatCurrency(cartTotal.grandTotal)} (${formatNumber(cartTotal.totalBottles)} আইটেম)` : t.nav.cart}
+          className={`relative flex items-center justify-center gap-1.5 px-3 h-11 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer shrink-0 ${
+            cartTotal.totalBottles > 0
+              ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 text-white shadow-md shadow-sky-600/25'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80'
+          }`}
         >
-          <div className="relative p-1">
-            <ShoppingCart className="w-5 h-5 text-cyan-700" />
+          <div className="relative flex items-center justify-center">
+            <ShoppingCart className={`w-4.5 h-4.5 ${cartTotal.totalBottles > 0 ? 'text-white stroke-[2.2]' : 'text-slate-600 stroke-[1.8]'}`} />
+            
+            {/* Item Count Notification Badge */}
             {cartTotal.totalBottles > 0 && (
-              <span className="absolute -top-1 -right-2 bg-rose-600 text-white text-[10px] font-extrabold h-4.5 min-w-4.5 px-1 rounded-full flex items-center justify-center shadow-md animate-pulse">
-                {cartTotal.totalBottles}
+              <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[9px] font-black h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-xs border border-white">
+                {formatNumber(cartTotal.totalBottles)}
               </span>
             )}
           </div>
-          <span className="text-[10px] sm:text-[11px] leading-none font-bold text-slate-700">
-            {cartTotal.totalBottles > 0 ? `৳${cartTotal.grandTotal}` : 'কার্ট'}
+
+          {/* Iconic Money Display (৳) */}
+          <span className={`text-[12px] font-black tracking-tight tabular-nums ${cartTotal.totalBottles > 0 ? 'text-amber-200' : 'text-slate-800'}`}>
+            {cartTotal.totalBottles > 0 ? formatCurrency(cartTotal.grandTotal) : '৳০'}
           </span>
         </button>
 
-        {/* Quick Call Action for Emergency Drinking Water */}
+        {/* Emergency Delivery Hotline Call Pill */}
         <a
           href="tel:+8801711102448"
-          className="min-h-[48px] px-2 flex flex-col items-center justify-center gap-0.5 text-emerald-700 active:scale-95 cursor-pointer"
-          title="জরুরী পানি কল"
+          aria-label={t.hero.emergencyDelivery}
+          title={t.hero.emergencyDelivery}
+          className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all duration-200 cursor-pointer shrink-0 ml-0.5"
         >
-          <div className="p-1 rounded-xl bg-emerald-100 text-emerald-700">
-            <PhoneCall className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] leading-none font-bold">কল দিন</span>
+          <PhoneCall className="w-4.5 h-4.5 animate-pulse stroke-[2.2]" />
         </a>
+
       </div>
-    </div>
+    </nav>
   );
 };
